@@ -1,13 +1,14 @@
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
 import './App.css';
-import Layout from './components/Layout';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Layout />
-    </BrowserRouter>
+    <div className="app">
+      <header className="app-header">
+        <h1>CIG Systém dovolených</h1>
+        <p>Aplikace se úspěšně načetla!</p>
+      </header>
+    </div>
   );
 }
 

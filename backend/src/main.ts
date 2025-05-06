@@ -4,19 +4,25 @@ import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  logger.log('Starting application...');
   
+  // Vytvoření NestJS aplikace
   const app = await NestFactory.create(AppModule);
   
+  // Konfigurace CORS
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['*'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
   
-  const port = process.env.PORT || 3001;
+  // Spuštění aplikace
+  const port = process.env.PORT || 3000;
   await app.listen(port);
-  logger.log(`Application is running on: http://localhost:${port}`);
+  
+  logger.log(`Application is running on: ${await app.getUrl()}`);
 }
 
-bootstrap();
+// Spuštění aplikace
+bootstrap().catch(err => {
+  console.error('Failed to start application:', err);
+});

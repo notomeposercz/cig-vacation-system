@@ -1,0 +1,9 @@
+# _sub/dovolena/config/local.neon
+database:
+    driver: mysql
+    host: 'db.dw189.webglobe.com'
+    dbname: 'dovol_myrec_cz'
+    user: 'dovol_myrec_cz'
+    password: 'ZDNqcB2B' # <-- SEM DEJ SVÉ HESLO DO UVOZOVEK
+    options:
+        charset: utf8mb4

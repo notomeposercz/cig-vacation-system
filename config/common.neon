@@ -1,0 +1,20 @@
+# _sub/dovolena/config/common.neon
+
+# TUTO SEKCI ZAKOMENTUJ NEBO SMAŽ:
+# extensions:
+#     database: Nette\Bridges\DatabaseDI\DatabaseExtension
+
+application:
+    errorPresenter: Error
+    mapping:
+        *: App\Presenters\*Presenter
+
+session:
+    expiration: '14 days'
+
+services:
+    router: App\Router\RouterFactory::createRouter
+
+# latte:
+    # autoRefresh: %debugMode%
+    # tempDirectory: %tempDir%/cache/latte

@@ -1,0 +1,18 @@
+[2025-05-07 09-05-43] requestFormSucceeded: User ID = USER_ADMIN_001  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-05-43] requestFormSucceeded: Calculated duration = 2 days  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-05-43] requestFormSucceeded: Attempting database insert.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-05-43] requestFormSucceeded: Database insert SUCCEEDED.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-05-43] requestFormSucceeded: Setting flash message.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-05-43] requestFormSucceeded: Flash message set. Attempting redirect to Dashboard:default.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-09-15] requestFormSucceeded: User ID = USER_ADMIN_001  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-09-15] requestFormSucceeded: Calculated duration = 2 days  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-09-15] requestFormSucceeded: Attempting database insert.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-09-15] requestFormSucceeded: Database insert SUCCEEDED.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-09-15] requestFormSucceeded: Flash message set. Attempting redirect to Dashboard:default.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-09-15] requestFormSucceeded: AbortException caught and re-thrown for redirect.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-17-34] requestFormSucceeded: User ID = USER_ADMIN_001  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-17-34] requestFormSucceeded: Calculated duration = 2 days  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-17-34] requestFormSucceeded: Attempting database insert.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-17-34] requestFormSucceeded: Database insert SUCCEEDED.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-17-34] requestFormSucceeded: Flash message set. Attempting redirect to Dashboard:default.  @  https://dovolena.myrec.cz/vacation/new-request 
+[2025-05-07 09-17-34] requestFormSucceeded: AbortException caught and re-thrown for redirect.  @  https://dovolena.myrec.cz/vacation/new-request 

@@ -1,8 +1,4 @@
-# _sub/dovolena/config/common.neon
-
-# TUTO SEKCI ZAKOMENTUJ NEBO SMAŽ:
-# extensions:
-#     database: Nette\Bridges\DatabaseDI\DatabaseExtension
+# _sub/dovolena_test/config/common.neon
 
 application:
     errorPresenter: Error
@@ -14,7 +10,6 @@ session:
 
 services:
     router: App\Router\RouterFactory::createRouter
-
-# latte:
-    # autoRefresh: %debugMode%
-    # tempDirectory: %tempDir%/cache/latte
+    forms.vacationRequestFormFactory: App\Forms\VacationRequestFormFactory
+    - App\Model\VacationCalculatorService
+    - App\Security\MyAuthenticator

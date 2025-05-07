@@ -1,0 +1,32 @@
+{* Soubor app/Presenters/templates/@layout.latte *}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{ifset $title}{$title} | {/ifset}CIG Dovolené</title>
+    <link rel="stylesheet" href="{$basePath}/css/style.css">
+    {* Tvé další CSS linky atd. *}
+</head>
+<body>
+    <header>
+        {* Sem může přijít menu nebo logo *}
+    </header>
+
+    <main class="container">
+        {* Místo {control flashes} použijeme toto: *}
+        <div n:foreach="$flashes as $flash" n:class="'alert alert-' . $flash->type">
+            {$flash->message}
+        </div>
+
+        {include content}
+    </main>
+
+    <footer>
+        {* Patička stránky *}
+    </footer>
+
+    {block scripts}
+        {* Tvé JS skripty *}
+    {/block}
+</body>
+</html>

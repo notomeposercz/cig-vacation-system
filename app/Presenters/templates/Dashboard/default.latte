@@ -8,13 +8,16 @@
 {/define}
 
 {block content}
+{if $user->isInRole('admin')}
+    <p><a n:href="goToAdmin!" class="button">Administrace dovolených</a></p>
+{/if}
     <h1>Můj přehled</h1>
 
     {if $user->isLoggedIn()}
         <p class="dashboard-login-info">
             Jste přihlášeni jako: <strong>{$user->getIdentity()->first_name} {$user->getIdentity()->last_name}</strong>
             (Role: {$user->getIdentity()->role|firstUpper})
-            <a n:href="Login:logout" class="dashboard-logout-link">Odhlásit se</a>
+            <a n:href="logout!" class="dashboard-logout-link">Odhlásit se</a>
         </p>
     {/if}
 

@@ -1,0 +1,39 @@
+{layout '../../@layout.latte'}
+
+{block title}Administrace - Žádosti o dovolenou{/block}
+
+{block content}
+    <h1>Administrace - Žádosti o dovolenou</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Žadatel</th>
+                <th>Od</th>
+                <th>Do</th>
+                <th>Počet dní</th>
+                <th>Typ</th>
+                <th>Stav</th>
+                <th>Poznámka</th>
+                <th>Podáno</th>
+                <th>Akce</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr n:foreach="$requests as $request">
+                <td>{$request->user->first_name} {$request->user->last_name}</td>
+                <td>{$request->start_date|date:'j. F Y'}</td>
+                <td>{$request->end_date|date:'j. F Y'}</td>
+                <td class="text-right">{$request->calculated_duration_days|number:1,',',' '}</td>
+                <td>{$request->type|firstUpper}</td>
+                <td>{$request->status|firstUpper}</td>
+                <td>{$request->note}</td>
+                <td>{$request->created_at|date:'j.n.Y H:i'}</td>
+                <td>
+    <a n:href="approve! id => $request->id" class="btn btn-success btn-sm">Schválit</a>
+    <a n:href="reject! id => $request->id" class="btn btn-danger btn-sm">Zamítnout</a>
+</td>
+            </tr>
+        </tbody>
+    </table>
+{/block}

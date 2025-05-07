@@ -1,0 +1,107 @@
+{layout '../@layout.latte'}
+
+{block title}Administrace - Správa uživatelů{/block}
+
+{block content}
+    <h1>Správa uživatelů</h1>
+    <p>Zde můžete spravovat uživatele a jejich nastavení dovolené pro rok {$currentYear}.</p>
+
+    <div class="admin-users-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Jméno</th>
+                    <th>E-mail</th>
+                    <th>Role</th>
+                    <th>Nárok na dovolenou</th>
+                    <th>Přenos z min. roku</th>
+                    <th>Vyčerpáno</th>
+                    <th>Zbývá</th>
+                    <th>Akce</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr n:foreach="$users as $userItem">
+                    {var $settings = $userItem->related('vacation_settings', 'user_id')->where('year', $currentYear)->fetch()}
+                    {var $totalDays = $settings ? $settings->total_days : 0}
+                    {var $carriedDays = $settings ? $settings->carried_days : 0}
+                    {var $daysTaken = 0}
+                    
+                    {* Výpočet vyčerpaných dnů *}
+                    {foreach $userItem->related('vacation_requests', 'user_id')->where('status', 'approved')->where('YEAR(start_date)', $currentYear) as $req}
+                        {var $daysTaken = $daysTaken + $req->calculated_duration_days}
+                    {/foreach}
+                    
+                    {var $remainingDays = ($totalDays + $carriedDays) - $daysTaken}
+                    
+                    <td>{$userItem->first_name} {$userItem->last_name}</td>
+                    <td>{$userItem->email}</td>
+                    <td>{$userItem->role|firstUpper}</td>
+                    <td>{$totalDays|number:1,',',' '}</td>
+                    <td>{$carriedDays|number:1,',',' '}</td>
+                    <td>{$daysTaken|number:1,',',' '}</td>
+                    <td class="{if $remainingDays < 0}text-danger{elseif $remainingDays < 5}text-warning{else}text-success{/if}">
+                        {$remainingDays|number:1,',',' '}
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-primary btn-sm" onclick="openSettingsModal('{$userItem->id}', '{$userItem->first_name} {$userItem->last_name}')">
+                            Nastavení dovolené
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {* Modální okno pro nastavení dovolené *}
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Nastavení dovolené</h2>
+            
+            {snippet settingsFormSnippet}
+                <div id="settingsForm">
+                    {control vacationSettingsForm}
+                </div>
+            {/snippet}
+        </div>
+    </div>
+{/block}
+
+{block scripts}
+    {* Skripty pro správu uživatelů *}
+    <script>
+        function openSettingsModal(userId, userName) {
+            // AJAX volání pro získání detailů a defaultních hodnot
+            fetch({link editSettings!}, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: 'userId=' + userId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('modalTitle').innerText = 'Nastavení dovolené: ' + userName;
+                    document.getElementById('settingsModal').style.display = 'block';
+                } else {
+                    alert('Chyba: ' + data.message);
+                }
+            });
+        }
+        
+        function closeModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+        
+        // Zavření modálního okna při kliknutí mimo obsah
+        window.onclick = function(event) {
+            let modal = document.getElementById('settingsModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+{/block}

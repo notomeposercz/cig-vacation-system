@@ -21,8 +21,8 @@ abstract class AdminBasePresenter extends BasePresenter
         }
 
         if (!$this->getUser()->isInRole('admin')) {
-            $this->flashMessage('Přístup do administrace je povolen pouze administrátorům.', 'danger');
-            $this->redirect('Dashboard:default');
-        }
+    $this->flashMessage('Přístup do administrace je povolen pouze administrátorům.', 'danger');
+    $this->redirect('Dashboard:default');
+}
     }
 }

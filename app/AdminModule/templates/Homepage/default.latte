@@ -5,5 +5,19 @@
 {block content}
     <h1>Administrace</h1>
     <p>{$message}</p>
-    <p><a n:href="Vacation:default">Správa žádostí o dovolenou</a></p>
+    
+    <div class="admin-menu-item">
+    <a n:href="AdminVacation:default" class="admin-link">
+        <span class="admin-icon">📋</span>
+        <span>Správa žádostí o dovolenou</span>
+    </a>
+</div>
+        
+        <div class="admin-menu-item">
+            <a n:href="Users:default" class="admin-link">
+                <span class="admin-icon">👥</span>
+                <span>Správa uživatelů a nastavení dovolené</span>
+            </a>
+        </div>
+    </div>
 {/block}

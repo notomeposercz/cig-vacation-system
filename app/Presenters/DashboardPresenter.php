@@ -36,6 +36,18 @@ final class DashboardPresenter extends BasePresenter // Dědí z BasePresenter p
         }
     }
 
+/**
+ * Přesměruje uživatele do administrace.
+ */
+public function handleGoToAdmin(): void
+{
+    if ($this->getUser()->isInRole('admin')) {
+        $this->redirectUrl($this->link(':Admin:Homepage:default'));
+    } else {
+        $this->flashMessage('Pro přístup do administrace nemáte oprávnění.', 'warning');
+        $this->redirect('this');
+    }
+}
     public function renderDefault(): void
     {
         // parent::renderDefault(); // Pokud by tvůj BasePresenter měl vlastní renderDefault logiku

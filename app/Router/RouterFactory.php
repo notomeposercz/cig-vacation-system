@@ -14,18 +14,34 @@ final class RouterFactory
     use Nette\StaticClass;
 
     public static function createRouter(): RouteList
-    {
-        $router = new RouteList;
+{
+    $router = new RouteList;
 
-        // Front-end - výchozí routa pro doménu (bez /dashboard)
-        $router->addRoute('', 'Dashboard:default', Route::ONE_WAY);
+    // Admin Module - musí být první pro správnou prioritu
+    $router->addRoute('admin/<presenter>/<action>[/<id>]', [
+        'module' => 'Admin',
+        'presenter' => 'Homepage',
+        'action' => 'default',
+    ]);
 
-        // Front-end - routa pro ostatní uživatelské části
-        $router->addRoute('<presenter>/<action>[/<id>]', 'Dashboard:default');
+    // Explicitní routa pro dashboard
+    $router->addRoute('dashboard[/<action>[/<id>]]', [
+        'presenter' => 'Dashboard',
+        'action' => 'default',
+    ]);
 
-        // Admin Module - tato routa musí být před výchozí, aby se vyhodnotila jako první
-        $router->addRoute('/admin/<presenter>/<action>[/<id>]', 'Admin:Homepage:default');
+    // Výchozí routa pro domovskou stránku
+    $router->addRoute('', [
+        'presenter' => 'Dashboard',
+        'action' => 'default',
+    ]);
 
-        return $router;
-    }
+    // Obecná routa pro ostatní presentery
+    $router->addRoute('<presenter>/<action>[/<id>]', [
+        'presenter' => 'Dashboard',
+        'action' => 'default',
+    ]);
+
+    return $router;
+}
 }

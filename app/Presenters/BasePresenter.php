@@ -37,9 +37,9 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
      * Pohodlná metoda pro odhlášení odkudkoliv.
      */
     public function handleLogout(): void
-    {
-        $this->getUser()->logout(true); // true smaže identitu okamžitě
-        $this->flashMessage('Byli jste úspěšně odhlášeni.', 'success');
-        $this->redirect('Login:default');
-    }
+{
+    $this->getUser()->logout(true); // true smaže identitu okamžitě
+    $this->flashMessage('Byli jste úspěšně odhlášeni.', 'success');
+    $this->redirect('Login:default');
+}
 }

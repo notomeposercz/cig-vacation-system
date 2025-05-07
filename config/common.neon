@@ -3,6 +3,7 @@
 application:
     errorPresenter: Error
     mapping:
+        Admin: App\AdminModule\Presenters\*Presenter
         *: App\Presenters\*Presenter
 
 session:

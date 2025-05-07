@@ -5,23 +5,23 @@ declare(strict_types=1);
 namespace App\Presenters;
 
 use App\Forms\VacationRequestFormFactory;
-use App\Model\VacationCalculatorService; // Přidáno použití naší služby
+use App\Model\VacationCalculatorService;
 use Nette;
 use Nette\Application\UI\Form;
 use Nette\Database\Explorer;
 use Nette\Utils\DateTime;
-use DateTimeImmutable; // Přidáno použití immutable data a času
+use DateTimeImmutable;
 
 final class VacationPresenter extends BasePresenter
 {
     private VacationRequestFormFactory $formFactory;
     private Explorer $database;
-    private VacationCalculatorService $vacationCalculatorService; // Přidána injektovaná služba
+    private VacationCalculatorService $vacationCalculatorService;
 
     public function __construct(
         VacationRequestFormFactory $formFactory,
         Explorer $database,
-        VacationCalculatorService $vacationCalculatorService // Injektujeme naši službu
+        VacationCalculatorService $vacationCalculatorService
     ) {
         parent::__construct();
         $this->formFactory = $formFactory;
@@ -50,8 +50,8 @@ final class VacationPresenter extends BasePresenter
         // Převedeme Nette\Utils\DateTime na DateTimeImmutable pro naši službu
         $startDate = DateTimeImmutable::fromMutable($values->start_date);
         $endDate = DateTimeImmutable::fromMutable($values->end_date);
-        $startHalfDay = $values->start_day_portion === 'AFTERNOON'; // Předpokládáme, že 'AFTERNOON' znamená půlden
-        $endHalfDay = $values->end_day_portion === 'MORNING';   // Předpokládáme, že 'MORNING' znamená půlden na konci
+        $startHalfDay = $values->start_day_portion === 'PM_HALF_DAY';
+        $endHalfDay = $values->end_day_portion === 'AM_HALF_DAY';
 
         // Použijeme naši VacationCalculatorService k výpočtu délky dovolené
         $calculatedDurationDays = $this->vacationCalculatorService->calculateVacationDays(
@@ -76,7 +76,7 @@ final class VacationPresenter extends BasePresenter
                 'type' => $values->type,
                 'status' => 'pending',
                 'note' => $values->note,
-                'calculated_duration_days' => $roundedDuration // Ukládáme přesně vypočítanou délku
+                'calculated_duration_days' => $roundedDuration
             ]);
             \Tracy\Debugger::log("requestFormSucceeded: Database insert SUCCEEDED.", 'form-debug');
 
@@ -84,13 +84,11 @@ final class VacationPresenter extends BasePresenter
             \Tracy\Debugger::log("requestFormSucceeded: Flash message set. Attempting redirect to Dashboard:default.", 'form-debug');
 
             $this->redirect('Dashboard:default');
-            // Kód zde by se už neměl vykonat
 
         } catch (Nette\Application\AbortException $e) {
-            // Tuto výjimku musíme znovu vyhodit, aby Nette dokončilo přesměrování
             \Tracy\Debugger::log("requestFormSucceeded: AbortException caught and re-thrown for redirect.", 'form-debug');
             throw $e;
-        } catch (\Exception $e) { // Zachytáváme všechny ostatní (skutečné) chyby
+        } catch (\Exception $e) {
             \Tracy\Debugger::log("requestFormSucceeded: GENERIC EXCEPTION CAUGHT!", 'form-debug-error');
             \Tracy\Debugger::log($e, \Tracy\ILogger::EXCEPTION);
             $form->addError('Při ukládání žádosti došlo k chybě. Zkuste to prosím znovu.');
@@ -98,11 +96,18 @@ final class VacationPresenter extends BasePresenter
     }
 
     /**
-     * Akce pro zobrazení formuláře (může být i renderDefault, pokud presenter dělá jen toto)
+     * Akce pro zobrazení formuláře
      */
     public function actionNewRequest(): void
     {
         // Můžeme předat nějaké výchozí hodnoty nebo data do šablony, pokud je potřeba
-        // $this->template->someData = ...;
+    }
+
+    /**
+     * Zruší vytváření žádosti a vrátí uživatele zpět.
+     */
+    public function handleCancel(): void
+    {
+        $this->redirect('Dashboard:default');
     }
 }

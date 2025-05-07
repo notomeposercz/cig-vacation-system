@@ -94,16 +94,12 @@ class AdminVacationPresenter extends AdminBasePresenter
     $this->redirect('this');
 }
 
-// Pomocná metoda pro extrakci numerického ID
-private function extractNumericId($stringId): ?int 
+// Pomocná metoda pro extrakci ID
+private function extractNumericId($stringId): ?string 
 {
-    // Extrahuje numerickou část z ID
-    if (preg_match('/\d+/', $stringId, $matches)) {
-        return (int)$matches[0];
-    }
-    
-    // Pokud nelze extrahovat, vrátí null
-    return null;
+    // Vraťte kompletní ID, protože v databázi jsou uloženy textové ID
+    return $stringId;
+    // Metoda nyní vždy vrací původní ID
 }
 
 // Totožné úpravy proveďte v metodě handleReject()

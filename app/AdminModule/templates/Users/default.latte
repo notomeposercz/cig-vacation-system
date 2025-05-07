@@ -60,10 +60,22 @@
             <h2 id="modalTitle">Nastavení dovolené</h2>
             
             {snippet settingsFormSnippet}
-                <div id="settingsForm">
-                    {control vacationSettingsForm}
-                </div>
-            {/snippet}
+    <div id="settingsForm">
+        {* Debug výpis pro kontrolu hodnoty ID uživatele *}
+        {if $user->isInRole('admin')}
+            <div class="debug-info" style="background:#f8f9fa; padding:5px; margin-bottom:10px; font-size:12px; border:1px solid #ddd;">
+                Debug info (pouze pro admina): ID uživatele v modálu: 
+                {ifset $form['vacationSettingsForm-user_id']}
+                    {$form['vacationSettingsForm-user_id']->value}
+                {else}
+                    <span style="color:red">Pole user_id neexistuje ve formuláři!</span>
+                {/ifset}
+            </div>
+        {/if}
+        
+        {control vacationSettingsForm}
+    </div>
+{/snippet}
         </div>
     </div>
 {/block}
@@ -75,6 +87,21 @@ function openSettingsModal(userId, userName) {
     console.group('openSettingsModal Diagnostika');
     console.log('ID uživatele:', userId);
     console.log('Jméno uživatele:', userName);
+    
+    // Přidaný blok kódu pro diagnostiku přímo v DOM
+    const debugDiv = document.createElement('div');
+debugDiv.id = 'debug-userid-value';
+debugDiv.style.cssText = 'position:fixed; bottom:0; right:0; background:#f8d7da; color:#721c24; padding:10px; z-index:9999;';
+debugDiv.innerHTML = '<strong>ID odesílané:</strong> <code>' + userId + '</code>';
+document.body.appendChild(debugDiv);
+    
+    // Odstraníme existující debug element, pokud existuje
+    const existingDebug = document.getElementById('debug-userid-value');
+    if (existingDebug) {
+        existingDebug.remove();
+    }
+    
+    document.body.appendChild(debugDiv);
 
     // Striktní validace vstupních parametrů
     if (!userId || typeof userId !== 'string') {
@@ -97,15 +124,24 @@ function openSettingsModal(userId, userName) {
             })
         })
         .then(response => {
-            // Nahrazení template literálu konkatenací
-            console.log('Stav odpovědi: ' + response.status);
+            // Přidáno pro diagnostiku odpovědi serveru
+            const debugResponseDiv = document.createElement('div');
+            debugResponseDiv.id = 'debug-server-response';
+            debugResponseDiv.style.cssText = 'position:fixed; bottom:50px; right:0; background:#d1ecf1; color:#0c5460; padding:10px; border:1px solid #bee5eb; z-index:9999; font-family:monospace;';
             
-            // Explicitní kontrola stavu odpovědi
+            rresponse.clone().text().then(text => {
+    const debugResponseDiv = document.createElement('div');
+    debugResponseDiv.id = 'debug-server-response';
+    debugResponseDiv.style.cssText = 'position:fixed; bottom:50px; right:0; background:#d1ecf1; z-index:9999;';
+    debugResponseDiv.innerHTML = '<strong>Odpověď:</strong> <pre>' + text + '</pre>';
+    document.body.appendChild(debugResponseDiv);
+});
+            
+            // Původní kód
+            console.log('Stav odpovědi: ' + response.status);
             if (!response.ok) {
-                // Nahrazení template literálu konkatenací
                 throw new Error('HTTP chyba! status: ' + response.status);
             }
-            
             return response.json();
         })
         .then(data => {

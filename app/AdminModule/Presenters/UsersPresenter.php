@@ -61,16 +61,19 @@ class UsersPresenter extends AdminBasePresenter
     }
     
     public function vacationSettingsFormSucceeded(Form $form, ArrayHash $values): void
-    {
-        try {
-            $this->processVacationSettings($values);
-            $this->flashMessage('Nastavení dovolené bylo úspěšně uloženo.', 'success');
-        } catch (\Exception $e) {
-            $this->flashMessage('Při ukládání nastavení došlo k chybě: ' . $e->getMessage(), 'error');
-        }
-        
-        $this->redirect('this');
+{
+    // Přidejte tento řádek pro ladění
+    \Tracy\Debugger::log("Přijaté user_id: {$values->user_id}", 'user-debug');
+    
+    try {
+        $this->processVacationSettings($values);
+        $this->flashMessage('Nastavení dovolené bylo úspěšně uloženo.', 'success');
+    } catch (\Exception $e) {
+        $this->flashMessage('Při ukládání nastavení došlo k chybě: ' . $e->getMessage(), 'error');
     }
+    
+    $this->redirect('this');
+}
 
     private function processVacationSettings(ArrayHash $values): void
     {
@@ -108,14 +111,14 @@ class UsersPresenter extends AdminBasePresenter
         return;
     }
 
-    // Validace formátu ID
-    if (!preg_match('/^USER_[A-Z]+_\d{3}$/', $userId)) {
-        \Tracy\Debugger::log("Neplatný formát ID: $userId", 'user-error');
-        $this->payload->error = true;
-        $this->payload->message = 'Neplatný identifikátor uživatele';
-        $this->sendPayload();
-        return;
-    }
+    // Validace formátu ID - úprava regex vzoru pro větší flexibilitu
+if (!preg_match('/^USER_[A-Za-z]+_\d+$/', $userId)) {
+    \Tracy\Debugger::log("Neplatný formát ID: $userId", 'user-error');
+    $this->payload->error = true;
+    $this->payload->message = 'Neplatný identifikátor uživatele';
+    $this->sendPayload();
+    return;
+}
 
     // Načtení uživatele
     $user = $this->database->table('users')
@@ -145,6 +148,7 @@ class UsersPresenter extends AdminBasePresenter
         'carried_days' => $settings ? $settings->carried_days : 0,
     ];
             
+            \Tracy\Debugger::log("Nastavuji výchozí hodnoty pro formulář: " . json_encode($defaults), 'user-debug');
     $this['vacationSettingsForm']->setDefaults($defaults);
             
     $this->payload->userId = $userId;

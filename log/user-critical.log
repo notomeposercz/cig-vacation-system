@@ -1,0 +1,4 @@
+[2025-05-07 20-42-19] RAW userId: userId  @  https://dovolena.myrec.cz/admin/users/?userId=userId&do=editSettings 
+[2025-05-07 20-42-19] Full REQUEST: {"userId":"userId","do":"editSettings"}  @  https://dovolena.myrec.cz/admin/users/?userId=userId&do=editSettings 
+[2025-05-07 20-42-22] RAW userId: userId  @  https://dovolena.myrec.cz/admin/users/?userId=userId&do=editSettings 
+[2025-05-07 20-42-22] Full REQUEST: {"userId":"userId","do":"editSettings"}  @  https://dovolena.myrec.cz/admin/users/?userId=userId&do=editSettings 

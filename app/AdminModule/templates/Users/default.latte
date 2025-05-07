@@ -71,37 +71,73 @@
 {block scripts}
     {* Skripty pro správu uživatelů *}
     <script>
-        function openSettingsModal(userId, userName) {
-            // AJAX volání pro získání detailů a defaultních hodnot
-            fetch({link editSettings!}, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: 'userId=' + userId
+function openSettingsModal(userId, userName) {
+    console.group('openSettingsModal Diagnostika');
+    console.log('ID uživatele:', userId);
+    console.log('Jméno uživatele:', userName);
+
+    // Striktní validace vstupních parametrů
+    if (!userId || typeof userId !== 'string') {
+        console.error('Neplatný formát ID uživatele');
+        console.groupEnd();
+        alert('Chyba: Neplatné ID uživatele');
+        return;
+    }
+
+    try {
+        // Bezpečné generování požadavku
+        fetch({link editSettings!}, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams({ 
+                userId: userId 
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('modalTitle').innerText = 'Nastavení dovolené: ' + userName;
-                    document.getElementById('settingsModal').style.display = 'block';
-                } else {
-                    alert('Chyba: ' + data.message);
-                }
-            });
-        }
-        
-        function closeModal() {
-            document.getElementById('settingsModal').style.display = 'none';
-        }
-        
-        // Zavření modálního okna při kliknutí mimo obsah
-        window.onclick = function(event) {
-            let modal = document.getElementById('settingsModal');
-            if (event.target == modal) {
-                modal.style.display = 'none';
+        })
+        .then(response => {
+            // Nahrazení template literálu konkatenací
+            console.log('Stav odpovědi: ' + response.status);
+            
+            // Explicitní kontrola stavu odpovědi
+            if (!response.ok) {
+                // Nahrazení template literálu konkatenací
+                throw new Error('HTTP chyba! status: ' + response.status);
             }
-        }
-    </script>
+            
+            return response.json();
+        })
+        .then(data => {
+            console.log('Přijatá data:', data);
+
+            if (data.success) {
+                const modalTitle = document.getElementById('modalTitle');
+                const settingsModal = document.getElementById('settingsModal');
+
+                if (modalTitle && settingsModal) {
+                    modalTitle.innerText = 'Nastavení dovolené: ' + userName;
+                    settingsModal.style.display = 'block';
+                } else {
+                    console.error('Nepodařilo se najít potřebné DOM elementy');
+                    alert('Chyba: Problém s načtením modálního okna');
+                }
+            } else {
+                console.warn('Server vrátil chybu:', data.message);
+                alert(data.message || 'Nastala neočekávaná chyba');
+            }
+        })
+        .catch(error => {
+            console.error('Kritická chyba požadavku:', error);
+            alert('Nepodařilo se zpracovat požadavek. Zkuste to prosím znovu.');
+        })
+        .finally(() => {
+            console.groupEnd();
+        });
+    } catch (error) {
+        console.error('Kritická chyba před odesláním:', error);
+        alert('Nastala kritická chyba před odesláním požadavku');
+    }
+}
+</script>
 {/block}

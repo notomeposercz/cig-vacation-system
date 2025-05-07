@@ -42,97 +42,121 @@ class AdminVacationPresenter extends AdminBasePresenter
      * Akcept žádosti o dovolenou.
      */
     public function handleApprove($id): void
-    {
-        try {
-            if (!$id) {
-                $this->flashMessage('Nebyla specifikována žádost ke schválení.', 'error');
-                $this->redirect('this');
-                return;
-            }
+{
+    try {
+        if (!$id) {
+            $this->flashMessage('Nebyla specifikována žádost ke schválení.', 'error');
+            $this->redirect('this');
+            return;
+        }
 
-            $request = $this->database->table('vacation_requests')->get($id);
-            
-            if (!$request) {
-                $this->flashMessage('Požadovaná žádost nebyla nalezena.', 'error');
-                $this->redirect('this');
-                return;
-            }
-            
-            // Kontrola, zda již není žádost schválena nebo zamítnuta
-            if ($request->status !== 'pending') {
-                $this->flashMessage('Žádost již byla zpracována (stav: ' . $request->status . ').', 'warning');
-                $this->redirect('this');
-                return;
-            }
-            
-            // Transakční zpracování pro zajištění konzistence dat
-            $this->database->beginTransaction();
-            
-            // Aktualizace stavu žádosti s použitím plně kvalifikovaného DateTime
-            $request->update([
-                'status' => 'approved',
-                'approved_at' => new \DateTime(),
-                'approved_by' => $this->getUser()->getId(),
-            ]);
-            
-            $this->database->commit();
-            $this->flashMessage('Žádost byla úspěšně schválena.', 'success');
-            
-        } catch (\Exception $e) {
-            $this->database->rollBack();
-            Debugger::log($e, Debugger::EXCEPTION);
-            $this->flashMessage('Při schvalování žádosti došlo k chybě.', 'error');
+        $request = $this->database->table('vacation_requests')->get($id);
+        
+        if (!$request) {
+            $this->flashMessage('Požadovaná žádost nebyla nalezena.', 'error');
+            $this->redirect('this');
+            return;
         }
         
-        $this->redirect('this');
+        // Bezpečné získání numerického ID
+        $currentUserId = $this->getUser()->getId();
+        $numericUserId = is_numeric($currentUserId) 
+            ? (int)$currentUserId 
+            : $this->extractNumericId($currentUserId);
+        
+        if (!$numericUserId) {
+            throw new \Exception('Nepodařilo se určit ID uživatele.');
+        }
+        
+        if ($request->status !== 'pending') {
+            $this->flashMessage('Žádost již byla zpracována (stav: ' . $request->status . ').', 'warning');
+            $this->redirect('this');
+            return;
+        }
+        
+        $this->database->beginTransaction();
+        
+        $request->update([
+            'status' => 'approved',
+            'approved_at' => new \DateTime(),
+            'approved_by' => $numericUserId, // Použití numerického ID
+        ]);
+        
+        $this->database->commit();
+        $this->flashMessage('Žádost byla úspěšně schválena.', 'success');
+        
+    } catch (\Exception $e) {
+        $this->database->rollBack();
+        \Tracy\Debugger::log($e, \Tracy\Debugger::EXCEPTION);
+        $this->flashMessage('Při schvalování žádosti došlo k chybě: ' . $e->getMessage(), 'error');
     }
     
-    /**
-     * Zamítnutí žádosti o dovolenou.
-     */
-    public function handleReject($id): void
-    {
-        try {
-            if (!$id) {
-                $this->flashMessage('Nebyla specifikována žádost k zamítnutí.', 'error');
-                $this->redirect('this');
-                return;
-            }
+    $this->redirect('this');
+}
 
-            $request = $this->database->table('vacation_requests')->get($id);
-            
-            if (!$request) {
-                $this->flashMessage('Požadovaná žádost nebyla nalezena.', 'error');
-                $this->redirect('this');
-                return;
-            }
-            
-            // Kontrola, zda již není žádost schválena nebo zamítnuta
-            if ($request->status !== 'pending') {
-                $this->flashMessage('Žádost již byla zpracována (stav: ' . $request->status . ').', 'warning');
-                $this->redirect('this');
-                return;
-            }
-            
-            // Transakční zpracování
-            $this->database->beginTransaction();
-            
-            // Aktualizace stavu žádosti s použitím plně kvalifikovaného DateTime
-            $request->update([
-                'status' => 'rejected',
-                'rejected_at' => new \DateTime(),
-                'rejected_by' => $this->getUser()->getId(),
-            ]);
-            
-            $this->database->commit();
-            $this->flashMessage('Žádost byla zamítnuta.', 'warning');
-            
-        } catch (\Exception $e) {
-            $this->database->rollBack();
-            Debugger::log($e, Debugger::EXCEPTION);
-            $this->flashMessage('Při zamítání žádosti došlo k chybě.', 'error');
+// Pomocná metoda pro extrakci numerického ID
+private function extractNumericId($stringId): ?int 
+{
+    // Extrahuje numerickou část z ID
+    if (preg_match('/\d+/', $stringId, $matches)) {
+        return (int)$matches[0];
+    }
+    
+    // Pokud nelze extrahovat, vrátí null
+    return null;
+}
+
+// Totožné úpravy proveďte v metodě handleReject()
+public function handleReject($id): void
+{
+    try {
+        if (!$id) {
+            $this->flashMessage('Nebyla specifikována žádost k zamítnutí.', 'error');
+            $this->redirect('this');
+            return;
+        }
+
+        $request = $this->database->table('vacation_requests')->get($id);
+        
+        if (!$request) {
+            $this->flashMessage('Požadovaná žádost nebyla nalezena.', 'error');
+            $this->redirect('this');
+            return;
         }
         
-        $this->redirect('this');
+        // Bezpečné získání numerického ID
+        $currentUserId = $this->getUser()->getId();
+        $numericUserId = is_numeric($currentUserId) 
+            ? (int)$currentUserId 
+            : $this->extractNumericId($currentUserId);
+        
+        if (!$numericUserId) {
+            throw new \Exception('Nepodařilo se určit ID uživatele.');
+        }
+        
+        if ($request->status !== 'pending') {
+            $this->flashMessage('Žádost již byla zpracována (stav: ' . $request->status . ').', 'warning');
+            $this->redirect('this');
+            return;
+        }
+        
+        $this->database->beginTransaction();
+        
+        $request->update([
+            'status' => 'rejected',
+            'rejected_at' => new \DateTime(),
+            'rejected_by' => $numericUserId, // Použití numerického ID
+        ]);
+        
+        $this->database->commit();
+        $this->flashMessage('Žádost byla zamítnuta.', 'warning');
+        
+    } catch (\Exception $e) {
+        $this->database->rollBack();
+        \Tracy\Debugger::log($e, \Tracy\Debugger::EXCEPTION);
+        $this->flashMessage('Při zamítání žádosti došlo k chybě: ' . $e->getMessage(), 'error');
     }
+    
+    $this->redirect('this');
+}
 }

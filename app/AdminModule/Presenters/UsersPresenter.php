@@ -98,62 +98,71 @@ class UsersPresenter extends AdminBasePresenter
     
     public function handleEditSettings(): void 
 {
-    // Získání userId přímo z požadavku
-    $userId = $this->getHttpRequest()->getPost('userId');
+    try {
+        // Získání userId přímo z požadavku
+        $userId = $this->getHttpRequest()->getPost('userId');
 
-    \Tracy\Debugger::log("Přijaté userId: $userId", 'user-debug');
+        // Důkladné logování
+        \Tracy\Debugger::log("Přijaté userId: $userId", 'user-debug');
 
-    // Striktní validace vstupu
-    if (!$this->isAjax()) {
-        $this->payload->error = true;
-        $this->payload->message = 'Neplatný požadavek';
-        $this->sendPayload();
-        return;
-    }
+        // Základní validace
+        if (!$this->isAjax()) {
+            $this->payload->error = true;
+            $this->payload->message = 'Neplatný požadavek - není AJAX';
+            $this->sendPayload();
+            return;
+        }
 
-    // Validace formátu ID - úprava regex vzoru pro větší flexibilitu
-if (!preg_match('/^USER_[A-Za-z]+_\d+$/', $userId)) {
-    \Tracy\Debugger::log("Neplatný formát ID: $userId", 'user-error');
-    $this->payload->error = true;
-    $this->payload->message = 'Neplatný identifikátor uživatele';
-    $this->sendPayload();
-    return;
-}
+        // Flexibilnější validace formátu ID
+        if (!$userId || !preg_match('/^USER_[A-Za-z0-9_]+$/', $userId)) {
+            \Tracy\Debugger::log("Neplatný formát ID: $userId", 'user-error');
+            $this->payload->error = true;
+            $this->payload->message = 'Neplatný identifikátor uživatele';
+            $this->sendPayload();
+            return;
+        }
 
-    // Načtení uživatele
-    $user = $this->database->table('users')
-        ->where('id', $userId)
-        ->fetch();
+        // Načtení uživatele
+        $user = $this->database->table('users')
+            ->where('id', $userId)
+            ->fetch();
 
-    if (!$user) {
-        \Tracy\Debugger::log("Uživatel nenalezen: $userId", 'user-critical');
-        $this->payload->error = true;
-        $this->payload->message = 'Uživatel nebyl nalezen';
-        $this->sendPayload();
-        return;
-    }
+        if (!$user) {
+            \Tracy\Debugger::log("Uživatel nenalezen: $userId", 'user-critical');
+            $this->payload->error = true;
+            $this->payload->message = 'Uživatel nebyl nalezen';
+            $this->sendPayload();
+            return;
+        }
 
-    $currentYear = (int)date('Y');
+        $currentYear = (int)date('Y');
 
-    // Načtení nastavení dovolené
-    $settings = $this->database->table('vacation_settings')
-        ->where('user_id', $userId)
-        ->where('year', $currentYear)
-        ->fetch();
+        // Načtení nastavení dovolené
+        $settings = $this->database->table('vacation_settings')
+            ->where('user_id', $userId)
+            ->where('year', $currentYear)
+            ->fetch();
                 
-    $defaults = [
-        'user_id' => $userId,
-        'year' => $currentYear,
-        'total_days' => $settings ? $settings->total_days : 20,
-        'carried_days' => $settings ? $settings->carried_days : 0,
-    ];
-            
-            \Tracy\Debugger::log("Nastavuji výchozí hodnoty pro formulář: " . json_encode($defaults), 'user-debug');
-    $this['vacationSettingsForm']->setDefaults($defaults);
-            
-    $this->payload->userId = $userId;
-    $this->payload->userName = $user->first_name . ' ' . $user->last_name;
-    $this->payload->success = true;
-            
-    $this->redrawControl('settingsFormSnippet');
+        $defaults = [
+            'user_id' => $userId,
+            'year' => $currentYear,
+            'total_days' => $settings ? $settings->total_days : 20,
+            'carried_days' => $settings ? $settings->carried_days : 0,
+        ];
+                
+        \Tracy\Debugger::log("Nastavuji výchozí hodnoty pro formulář: " . json_encode($defaults), 'user-debug');
+        $this['vacationSettingsForm']->setDefaults($defaults);
+                
+        $this->payload->userId = $userId;
+        $this->payload->userName = $user->first_name . ' ' . $user->last_name;
+        $this->payload->success = true;
+                
+        $this->redrawControl('settingsFormSnippet');
+    
+    } catch (\Exception $e) {
+        \Tracy\Debugger::log("Chyba při zpracování nastavení dovolené: " . $e->getMessage(), 'user-error');
+        $this->payload->error = true;
+        $this->payload->message = "Chyba: " . $e->getMessage();
+        $this->sendPayload();
+    }
 }}

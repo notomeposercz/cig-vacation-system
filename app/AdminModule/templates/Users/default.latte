@@ -90,10 +90,9 @@ function openSettingsModal(userId, userName) {
     
     // Přidaný blok kódu pro diagnostiku přímo v DOM
     const debugDiv = document.createElement('div');
-debugDiv.id = 'debug-userid-value';
-debugDiv.style.cssText = 'position:fixed; bottom:0; right:0; background:#f8d7da; color:#721c24; padding:10px; z-index:9999;';
-debugDiv.innerHTML = '<strong>ID odesílané:</strong> <code>' + userId + '</code>';
-document.body.appendChild(debugDiv);
+    debugDiv.id = 'debug-userid-value';
+    debugDiv.style.cssText = 'position:fixed; bottom:0; right:0; background:#f8d7da; color:#721c24; padding:10px; z-index:9999;';
+    debugDiv.innerHTML = '<strong>ID odesílané:</strong> <code>' + userId + '</code>';
     
     // Odstraníme existující debug element, pokud existuje
     const existingDebug = document.getElementById('debug-userid-value');
@@ -125,17 +124,13 @@ document.body.appendChild(debugDiv);
         })
         .then(response => {
             // Přidáno pro diagnostiku odpovědi serveru
-            const debugResponseDiv = document.createElement('div');
-            debugResponseDiv.id = 'debug-server-response';
-            debugResponseDiv.style.cssText = 'position:fixed; bottom:50px; right:0; background:#d1ecf1; color:#0c5460; padding:10px; border:1px solid #bee5eb; z-index:9999; font-family:monospace;';
-            
-            rresponse.clone().text().then(text => {
-    const debugResponseDiv = document.createElement('div');
-    debugResponseDiv.id = 'debug-server-response';
-    debugResponseDiv.style.cssText = 'position:fixed; bottom:50px; right:0; background:#d1ecf1; z-index:9999;';
-    debugResponseDiv.innerHTML = '<strong>Odpověď:</strong> <pre>' + text + '</pre>';
-    document.body.appendChild(debugResponseDiv);
-});
+            response.clone().text().then(text => {
+                const debugResponseDiv = document.createElement('div');
+                debugResponseDiv.id = 'debug-server-response';
+                debugResponseDiv.style.cssText = 'position:fixed; bottom:50px; right:0; background:#d1ecf1; color:#0c5460; padding:10px; border:1px solid #bee5eb; z-index:9999; font-family:monospace;';
+                debugResponseDiv.innerHTML = '<strong>Odpověď:</strong> <pre>' + text + '</pre>';
+                document.body.appendChild(debugResponseDiv);
+            });
             
             // Původní kód
             console.log('Stav odpovědi: ' + response.status);

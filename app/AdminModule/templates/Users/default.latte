@@ -1,0 +1,164 @@
+{layout '../@layout.latte'}
+
+{block title}Administrace - Správa uživatelů{/block}
+
+{block content}
+    <h1>Správa uživatelů</h1>
+    <p>Zde můžete spravovat uživatele a jejich nastavení dovolené pro rok {$currentYear}.</p>
+
+    <div class="admin-users-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Jméno</th>
+                    <th>E-mail</th>
+                    <th>Role</th>
+                    <th>Nárok na dovolenou</th>
+                    <th>Přenos z min. roku</th>
+                    <th>Vyčerpáno</th>
+                    <th>Zbývá</th>
+                    <th>Akce</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr n:foreach="$users as $userItem">
+                    {var $settings = $userItem->related('vacation_settings', 'user_id')->where('year', $currentYear)->fetch()}
+                    {var $totalDays = $settings ? $settings->total_days : 0}
+                    {var $carriedDays = $settings ? $settings->carried_days : 0}
+                    {var $daysTaken = 0}
+                    
+                    {* Výpočet vyčerpaných dnů *}
+                    {foreach $userItem->related('vacation_requests', 'user_id')->where('status', 'approved')->where('YEAR(start_date)', $currentYear) as $req}
+                        {var $daysTaken = $daysTaken + $req->calculated_duration_days}
+                    {/foreach}
+                    
+                    {var $remainingDays = ($totalDays + $carriedDays) - $daysTaken}
+                    
+                    <td>{$userItem->first_name} {$userItem->last_name}</td>
+                    <td>{$userItem->email}</td>
+                    <td>{$userItem->role|firstUpper}</td>
+                    <td>{$totalDays|number:1,',',' '}</td>
+                    <td>{$carriedDays|number:1,',',' '}</td>
+                    <td>{$daysTaken|number:1,',',' '}</td>
+                    <td class="{if $remainingDays < 0}text-danger{elseif $remainingDays < 5}text-warning{else}text-success{/if}">
+                        {$remainingDays|number:1,',',' '}
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-primary btn-sm" onclick="openSettingsModal('{$userItem->id}', '{$userItem->first_name} {$userItem->last_name}')">
+                            Nastavení dovolené
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {* Modální okno pro nastavení dovolené *}
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Nastavení dovolené</h2>
+            
+            {snippet settingsFormSnippet}
+    <div id="settingsForm">
+        {* Debug sekce pro administrátora *}
+        {if $user->isInRole('admin')}
+            <div class="debug-info" style="background:#f8f9fa; padding:5px; margin-bottom:10px; font-size:12px; border:1px solid #ddd;">
+                Debug info (pouze pro admina): ID uživatele v modálu: 
+                {var $formControl = $control['vacationSettingsForm']}
+                {if $formControl && isset($formControl['user_id'])}
+                    {$formControl['user_id']->value}
+                {else}
+                    <span style="color:red">Pole user_id neexistuje ve formuláři!</span>
+                {/if}
+            </div>
+        {/if}
+        
+        {* Přímé vykreslení formuláře *}
+        {control vacationSettingsForm}
+    </div>
+{/snippet}
+        </div>
+    </div>
+{/block}
+
+{block scripts}
+    {* Skripty pro správu uživatelů *}
+    <script>
+    function openSettingsModal(userId, userName) {
+        console.group('openSettingsModal Diagnostika');
+        console.log('ID uživatele:', userId);
+        console.log('Jméno uživatele:', userName);
+        
+        // Vylepšené zpracování odpovědi
+        fetch({link editSettings!}, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams({ 
+                userId: userId 
+            })
+        })
+        .then(response => {
+            // Logging celé odpovědi pro diagnostiku
+            response.clone().text().then(text => {
+                console.log('Surová odpověď ze serveru:', text);
+                
+                // Pokus o nalezení chyb v HTML
+                const parser = new DOMParser();
+                const htmlDoc = parser.parseFromString(text, 'text/html');
+                const errorElements = htmlDoc.querySelectorAll('.error, .alert-danger, [style*="color:red"]');
+                if (errorElements.length) {
+                    console.warn('Nalezeny potenciální chyby v HTML odpovědi:', 
+                        Array.from(errorElements).map(el => el.textContent));
+                }
+            });
+            
+            return response.json();
+        })
+        .then(data => {
+            console.log('Zpracovaná odpověď:', data);
+            
+            if (data.success) {
+                // Úspěšně načteno
+                document.getElementById('modalTitle').innerText = 'Nastavení dovolené: ' + userName;
+                document.getElementById('settingsModal').style.display = 'block';
+                
+                // Pokus o opravu snippetu, pokud se nezobrazuje správně
+                if (data.snippets && data.snippets['snippet--settingsFormSnippet']) {
+                    const snippetContent = data.snippets['snippet--settingsFormSnippet'];
+                    console.log('Obsah snippetu:', snippetContent);
+                    
+                    // Kontrola zda formulář existuje po načtení snippetu
+                    setTimeout(() => {
+                        const formElement = document.getElementById('vacationSettingsForm');
+                        console.log('Formulář po načtení snippetu:', formElement);
+                        
+                        if (formElement) {
+                            console.log('Vstupy formuláře:', 
+                                Array.from(formElement.elements).map(e => e.name + ':' + e.value));
+                        }
+                    }, 100);
+                }
+            } else {
+                console.warn('Chyba z API:', data.message);
+                alert(data.message || 'Nastala neočekávaná chyba');
+            }
+        })
+        .catch(error => {
+            console.error('Kritická chyba:', error);
+            alert('Nepodařilo se zpracovat požadavek. Zkuste to prosím znovu.');
+        })
+        .finally(() => {
+            console.groupEnd();
+        });
+    }
+
+    // Pomocná funkce pro zavření modálu
+    function closeModal() {
+        document.getElementById('settingsModal').style.display = 'none';
+    }
+    </script>
+{/block}

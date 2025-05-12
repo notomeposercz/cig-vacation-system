@@ -1,0 +1,178 @@
+{layout "../@layout.latte"} {* Ujisti se, že cesta k tvému hlavnímu layoutu je správná *}
+
+{block title}Můj přehled dovolených{/block}
+
+{define head}
+    {* Odkaz na CSS FullCalendaru pravděpodobně nepotřebuješ, pokud používáš index.global.min.js *}
+    {* <link href="{$basePath}/css/fullcalendar/main.min.css" rel="stylesheet"> *}
+{/define}
+
+{block content}
+{if $user->isInRole('admin')}
+    <p><a n:href="goToAdmin!" class="button">Administrace dovolených</a></p>
+{/if}
+    <h1>Můj přehled</h1>
+
+    {if $user->isLoggedIn()}
+        <p class="dashboard-login-info">
+            Jste přihlášeni jako: <strong>{$user->getIdentity()->first_name} {$user->getIdentity()->last_name}</strong>
+            (Role: {$user->getIdentity()->role|firstUpper})
+            <a n:href="logout!" class="dashboard-logout-link">Odhlásit se</a>
+        </p>
+    {/if}
+
+    <p><a n:href="Vacation:newRequest" class="button">Podat novou žádost o dovolenou</a></p>
+
+    <hr class="dashboard-divider">
+
+    <h2>Kalendář dovolených</h2>
+    <div id="calendar"></div>
+
+    <hr class="dashboard-divider">
+
+    <h2>Statistika dovolené pro rok {$currentYear}</h2>
+    {if $vacationSettings}
+        <p>Celkový nárok (včetně převedených dní): <strong class="stat-value">{$vacationSettings->total_days + $vacationSettings->carried_days|number:1,',',' '} dní</strong></p>
+        <p>Převedeno z minulého roku: <span class="stat-value">{$vacationSettings->carried_days|number:1,',',' '} dní</span></p>
+        <p>Standardní nárok pro rok {$currentYear}: <span class="stat-value">{$vacationSettings->total_days|number:1,',',' '} dní</span></p>
+        <p>Vyčerpáno (schváleno) letos: <strong class="stat-value">{$daysTaken} dní</strong></p>
+        <p class="stat-remaining">Zbývá: <span class="stat-remaining-value" style="color: {if $remainingDays < 0}red{else}green{/if};">{$remainingDays|number:1,',',' '} dní</span></p>
+    {else}
+        <p class="alert alert-warning">Pro rok {$currentYear} nemáte zatím nastavený nárok na dovolenou. Kontaktujte prosím administrátora.</p>
+    {/if}
+
+    <hr class="dashboard-divider">
+
+    <h2>Moje žádosti o dovolenou</h2>
+    {if count($myRequests) > 0}
+        <table class="vacation-requests-table">
+            <thead>
+                <tr>
+                    <th>Od</th>
+                    <th>Do</th>
+                    <th>Počet dní</th>
+                    <th>Typ</th>
+                    <th>Stav</th>
+                    <th>Poznámka</th>
+                    <th>Podáno</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr n:foreach="$myRequests as $request">
+                    <td>
+                        {$request->start_date|date:'j. F Y'}
+                        ({$request->start_day_portion
+                            |replace:'FULL_DAY', 'celý den'
+                            |replace:'AM_HALF_DAY', 'dop. půlden'
+                            |replace:'PM_HALF_DAY', 'odp. půlden'
+                        })
+                    </td>
+                    <td>
+                        {$request->end_date|date:'j. F Y'}
+                        ({$request->end_day_portion
+                            |replace:'FULL_DAY', 'celý den'
+                            |replace:'AM_HALF_DAY', 'dop. půlden'
+                            |replace:'PM_HALF_DAY', 'odp. půlden'
+                        })
+                    </td>
+                    <td class="text-right">{$request->calculated_duration_days|number:1,',',' '}</td>
+                    <td>{$request->type|firstUpper}</td>
+                    <td class="status-{$request->status}">
+                        {$request->status|firstUpper}
+                    </td>
+                    <td>{$request->note}</td>
+                    <td>{$request->created_at|date:'j.n.Y H:i'}</td>
+                </tr>
+            </tbody>
+        </table>
+    {else}
+        <p>Zatím nemáte žádné žádosti o dovolenou.</p>
+    {/if}
+
+    {* --- Modální okno pro detail události (HTML struktura) --- *}
+    <div id="eventDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="modalTitle">Detail žádosti</h2>
+            <table>
+                <tr><td><strong>Žadatel:</strong></td><td id="modalUserName"></td></tr>
+                <tr><td><strong>Typ:</strong></td><td id="modalType"></td></tr>
+                <tr><td><strong>Stav:</strong></td><td id="modalStatus"></td></tr>
+                <tr><td><strong>Od:</strong></td><td id="modalStartDate"></td></tr>
+                <tr><td><strong>Do:</strong></td><td id="modalEndDate"></td></tr>
+                <tr><td><strong>Délka:</strong></td><td id="modalDuration"></td></tr>
+                <tr><td><strong>Poznámka:</strong></td><td id="modalNote" style="white-space: pre-wrap;"></td></tr>
+                <tr><td><strong>Podáno dne:</strong></td><td id="modalRequestedAt"></td></tr>
+            </table>
+            {* Zde by mohla být další tlačítka, např. pro storno žádosti, pokud je 'pending' *}
+        </div>
+    </div>
+    {* --- Konec modálního okna --- *}
+
+{/block}
+
+{block scripts}
+    {* Ujisti se, že cesta a název souboru odpovídá tomu, co jsi nahrál (např. index.global.min.js z dist/) *}
+    <script src="{$basePath}/js/fullcalendar/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var modal = document.getElementById('eventDetailModal');
+            var modalCloseButton = modal.querySelector('.close-button'); // Selektor pro tlačítko zavření
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listYear'
+                },
+                events: {$calendarEventsJson|noescape}, // Načteme události z PHP (JSON)
+                locale: 'cs',
+                buttonText: {
+                    today:    'Dnes',
+                    month:    'Měsíc',
+                    week:     'Týden',
+                    day:      'Den',
+                    list:     'Seznam roku' // Můžeš přeložit i 'listYear' pokud ho budeš používat
+                },
+                firstDay: 1, // Pondělí jako první den v týdnu
+                // businessHours: true, // Můžeš odkomentovat pro zobrazení pracovní doby
+                // weekends: true,     // Zobrazovat víkendy (výchozí)
+                // eventMinHeight: 20, // Minimální výška události v časové mřížce
+
+                eventClick: function(info) {
+                    var props = info.event.extendedProps; // Zkrácení přístupu
+
+                    document.getElementById('modalTitle').innerText = 'Detail: ' + info.event.title;
+                    document.getElementById('modalUserName').innerText = props.userName || '-';
+                    document.getElementById('modalType').innerText = props.type ? props.type.charAt(0).toUpperCase() + props.type.slice(1) : '-';
+                    document.getElementById('modalStatus').innerText = props.status ? props.status.charAt(0).toUpperCase() + props.status.slice(1) : '-';
+                    document.getElementById('modalStartDate').innerText = props.startDateFull + ' (' + props.startDayPortionText + ')';
+                    document.getElementById('modalEndDate').innerText = props.endDateFull + ' (' + props.endDayPortionText + ')';
+                    document.getElementById('modalDuration').innerText = (props.duration || '-') + ' dní';
+                    document.getElementById('modalNote').innerText = props.note || '-';
+                    document.getElementById('modalRequestedAt').innerText = props.requestedAt || '-';
+
+                    modal.style.display = 'block';
+                    info.jsEvent.preventDefault(); // Zabrání výchozí akci, pokud by událost byla odkazem
+                }
+            });
+
+            // Funkcionalita pro zavírání modálního okna
+            if (modalCloseButton) {
+                modalCloseButton.onclick = function() {
+                    modal.style.display = 'none';
+                }
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) { // Zavře, jen pokud se klikne na pozadí (overlay)
+                    modal.style.display = 'none';
+                }
+            }
+
+            calendar.render();
+        });
+    </script>
+{/block}

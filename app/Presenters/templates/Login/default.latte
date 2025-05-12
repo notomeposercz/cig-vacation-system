@@ -1,0 +1,26 @@
+{block content}
+<h1>Přihlášení</h1>
+
+{form loginForm}
+    <ul class="errors" n:if="$form->hasErrors()">
+        <li n:foreach="$form->getErrors() as $error">{$error}</li>
+    </ul>
+
+    <table>
+        <tr>
+            <th>{label username /}</th>
+            <td>{input username, size => 30}</td>
+        </tr>
+        <tr>
+            <th>{label password /}</th>
+            <td>{input password, size => 30}</td>
+        </tr>
+        <tr>
+            <th></th>
+            <td>{input send}</td>
+        </tr>
+    </table>
+{/form}
+{/block}
+
+{block title}Přihlášení{/block}

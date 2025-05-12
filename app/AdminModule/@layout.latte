@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{ifset $title}{$title} | {/ifset}CIG Dovolené - Administrace</title>
+    <link rel="stylesheet" href="{$basePath}/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="admin-header">
+            <h2>Administrace CIG Dovolené</h2>
+            <div class="user-info">
+                {if $user->isLoggedIn()}
+                    Přihlášen: <strong>{$user->getIdentity()->first_name} {$user->getIdentity()->last_name}</strong>
+                    <a n:href="logout!" class="button-sm">Odhlásit</a>
+                {/if}
+            </div>
+        </div>
+        <nav class="admin-nav">
+            <a n:href=":Admin:Homepage:default">Úvod</a>
+            <a n:href=":Admin:AdminVacation:default">Správa dovolených</a>
+            <a n:href=":Admin:Users:default">Správa uživatelů</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div n:foreach="$flashes as $flash" n:class="'alert alert-' . $flash->type">
+            {$flash->message}
+        </div>
+
+        {include content}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© {date('Y')} CIG Dovolené - Administrační rozhraní</p>
+        </div>
+    </footer>
+
+    {block scripts}{/block}
+</body>
+</html>

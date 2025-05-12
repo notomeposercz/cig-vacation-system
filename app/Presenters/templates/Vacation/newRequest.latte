@@ -1,0 +1,15 @@
+{layout "../@layout.latte"}
+
+{block title}Nová žádost o dovolenou{/block}
+
+{block content}
+<h1>Nová žádost o dovolenou</h1>
+
+<div class="form-container">
+    {control requestForm}
+    
+    <div class="form-actions">
+        <a n:href="cancel!" class="button button-secondary">Zpět na přehled</a>
+    </div>
+</div>
+{/block}

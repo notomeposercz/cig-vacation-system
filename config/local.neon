@@ -1,0 +1,9 @@
+# _sub/dovolena_test/config/local.neon - POUŽITÍ DSN FORMÁTU
+database:
+    dsn: 'mysql:host=db.dw189.webglobe.com;dbname=dovol_myrec_cz;charset=utf8mb4'
+    user: 'dovol_myrec_cz'
+    password: 'ZDNqcB2B'
+    # options: # Další PDO options, pokud by byly potřeba, se přidávají sem. Prozatím vynecháme.
+    #   # Například:
+    #   # PDO::ATTR_TIMEOUT: 5
+    # lazy: true # Pokud chceš líné připojování (až při prvním dotazu)

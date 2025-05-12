@@ -1,0 +1,20 @@
+# Lokální konfigurace (obsahuje citlivá data)
+/app/config/local.neon
+
+# Složka se staženými závislostmi Composeru
+/vendor/
+
+# Dočasné soubory Nette a logy
+/temp/
+/log/
+
+# Soubory IDE (příklady, můžeš doplnit podle svého editoru)
+/.idea/
+/.vscode/
+*.swp
+*.swo
+
+# Další systémové soubory
+.DS_Store
+Thumbs.db
+.aider*

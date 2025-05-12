@@ -81,13 +81,20 @@ final class LoginPresenter extends Nette\Application\UI\Presenter
         }
     }
 
-    /**
-     * Akce pro odhlášení uživatele.
-     */
+    
+     //* Akce pro odhlášení uživatele.
+     
     public function actionLogout(): void
     {
         $this->getUser()->logout();
         $this->flashMessage('Byli jste úspěšně odhlášeni.', 'success');
         $this->redirect('Login:default'); // Přesměrujeme zpět na přihlašovací stránku
     }
+    
+    public function actionDefault(): void
+{
+    if ($this->getParameter('loggedOut')) {
+        $this->flashMessage('Byli jste úspěšně odhlášeni.', 'success');
+    }
+}
 }

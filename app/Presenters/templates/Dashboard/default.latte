@@ -1,148 +1,247 @@
-{layout "../@layout.latte"} {* Ujisti se, že cesta k tvému hlavnímu layoutu je správná *}
+{layout "../@layout.latte"}
 
 {block title}Můj přehled dovolených{/block}
 
-{define head}
-    {* Odkaz na CSS FullCalendaru pravděpodobně nepotřebuješ, pokud používáš index.global.min.js *}
-    {* <link href="{$basePath}/css/fullcalendar/main.min.css" rel="stylesheet"> *}
-{/define}
-
 {block content}
-{if $user->isInRole('admin')}
-    <p><a n:href="goToAdmin!" class="button">Administrace dovolených</a></p>
-{/if}
-    <h1>Můj přehled</h1>
+<div class="dashboard-container">
+    <!-- Horní lišta s akcemi -->
+    <div class="dashboard-header">
+    <div class="dashboard-title">
+        <h1>Můj přehled dovolené</h1>
+        {if $user->isLoggedIn()}
+            <p class="dashboard-login-info">
+                Přihlášen: <strong>{$user->getIdentity()->first_name} {$user->getIdentity()->last_name}</strong>
+                <span class="user-role">{$user->getIdentity()->role|firstUpper}</span>
+                <a n:href="logout!" class="dashboard-logout-link">Odhlásit se</a>
+            </p>
+        {/if}
+    </div>
+    <div class="dashboard-actions">
+        <a n:href="Vacation:newRequest" class="button primary-button">
+            <i class="icon-plus"></i> Podat novou žádost o dovolenou
+        </a>
+        {if $user->isInRole('admin')}
+            <a n:href="goToAdmin!" class="button secondary-button">
+                <i class="icon-cog"></i> Administrace
+            </a>
+        {/if}
+    </div>
+</div>
 
-    {if $user->isLoggedIn()}
-        <p class="dashboard-login-info">
-            Jste přihlášeni jako: <strong>{$user->getIdentity()->first_name} {$user->getIdentity()->last_name}</strong>
-            (Role: {$user->getIdentity()->role|firstUpper})
-            <a n:href="logout!" class="dashboard-logout-link">Odhlásit se</a>
-        </p>
-    {/if}
-
-    <p><a n:href="Vacation:newRequest" class="button">Podat novou žádost o dovolenou</a></p>
-
-    <hr class="dashboard-divider">
-
-    <h2>Kalendář dovolených</h2>
-    <div id="calendar"></div>
-
-    <hr class="dashboard-divider">
-
+<div class="dashboard-statistics">
     <h2>Statistika dovolené pro rok {$currentYear}</h2>
-    {if $vacationSettings}
-        <p>Celkový nárok (včetně převedených dní): <strong class="stat-value">{$vacationSettings->total_days + $vacationSettings->carried_days|number:1,',',' '} dní</strong></p>
-        <p>Převedeno z minulého roku: <span class="stat-value">{$vacationSettings->carried_days|number:1,',',' '} dní</span></p>
-        <p>Standardní nárok pro rok {$currentYear}: <span class="stat-value">{$vacationSettings->total_days|number:1,',',' '} dní</span></p>
-        <p>Vyčerpáno (schváleno) letos: <strong class="stat-value">{$daysTaken} dní</strong></p>
-        <p class="stat-remaining">Zbývá: <span class="stat-remaining-value" style="color: {if $remainingDays < 0}red{else}green{/if};">{$remainingDays|number:1,',',' '} dní</span></p>
-    {else}
-        <p class="alert alert-warning">Pro rok {$currentYear} nemáte zatím nastavený nárok na dovolenou. Kontaktujte prosím administrátora.</p>
-    {/if}
+    <div class="statistics-container">
+        {if $vacationSettings}
+            <div class="stat-box">
+                <div class="stat-title">Nárok na dovolenou</div>
+                <div class="stat-value">{$vacationSettings->total_days + $vacationSettings->carried_days|number:1,',',' '} dní</div>
+                <div class="stat-details">
+                    <div>Z minulého roku: {$vacationSettings->carried_days|number:1,',',' '} dní</div>
+                    <div>Standardní nárok: {$vacationSettings->total_days|number:1,',',' '} dní</div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Vyčerpáno (schváleno)</div>
+                <div class="stat-value">{$daysTaken|number:1,',',' '} dní</div>
+            </div>
+            <div class="stat-box remaining">
+                <div class="stat-title">Zbývá</div>
+                <div class="stat-value" style="color: {if $remainingDays < 0}#e74c3c{elseif $remainingDays < 5}#f39c12{else}#27ae60{/if};">
+                    {$remainingDays|number:1,',',' '} dní
+                </div>
+            </div>
+        {else}
+            <p class="alert alert-warning full-width">Pro rok {$currentYear} nemáte zatím nastavený nárok na dovolenou. Kontaktujte prosím administrátora.</p>
+        {/if}
+    </div>
+</div>
 
-    <hr class="dashboard-divider">
-
-    <h2>Moje žádosti o dovolenou</h2>
-    {if count($myRequests) > 0}
-        <table class="vacation-requests-table">
-            <thead>
-                <tr>
-                    <th>Od</th>
-                    <th>Do</th>
-                    <th>Počet dní</th>
-                    <th>Typ</th>
-                    <th>Stav</th>
-                    <th>Poznámka</th>
-                    <th>Podáno</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr n:foreach="$myRequests as $request">
-                    <td>
-                        {$request->start_date|date:'j. F Y'}
-                        ({$request->start_day_portion
-                            |replace:'FULL_DAY', 'celý den'
-                            |replace:'AM_HALF_DAY', 'dop. půlden'
-                            |replace:'PM_HALF_DAY', 'odp. půlden'
-                        })
-                    </td>
-                    <td>
-                        {$request->end_date|date:'j. F Y'}
-                        ({$request->end_day_portion
-                            |replace:'FULL_DAY', 'celý den'
-                            |replace:'AM_HALF_DAY', 'dop. půlden'
-                            |replace:'PM_HALF_DAY', 'odp. půlden'
-                        })
-                    </td>
-                    <td class="text-right">{$request->calculated_duration_days|number:1,',',' '}</td>
-                    <td>{$request->type|firstUpper}</td>
-                    <td class="status-{$request->status}">
-                        {$request->status|firstUpper}
-                    </td>
-                    <td>{$request->note}</td>
-                    <td>{$request->created_at|date:'j.n.Y H:i'}</td>
-                </tr>
-            </tbody>
-        </table>
-    {else}
-        <p>Zatím nemáte žádné žádosti o dovolenou.</p>
-    {/if}
-
-    {* --- Modální okno pro detail události (HTML struktura) --- *}
-    <div id="eventDetailModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 id="modalTitle">Detail žádosti</h2>
-            <table>
-                <tr><td><strong>Žadatel:</strong></td><td id="modalUserName"></td></tr>
-                <tr><td><strong>Typ:</strong></td><td id="modalType"></td></tr>
-                <tr><td><strong>Stav:</strong></td><td id="modalStatus"></td></tr>
-                <tr><td><strong>Od:</strong></td><td id="modalStartDate"></td></tr>
-                <tr><td><strong>Do:</strong></td><td id="modalEndDate"></td></tr>
-                <tr><td><strong>Délka:</strong></td><td id="modalDuration"></td></tr>
-                <tr><td><strong>Poznámka:</strong></td><td id="modalNote" style="white-space: pre-wrap;"></td></tr>
-                <tr><td><strong>Podáno dne:</strong></td><td id="modalRequestedAt"></td></tr>
-            </table>
-            {* Zde by mohla být další tlačítka, např. pro storno žádosti, pokud je 'pending' *}
+    <!-- Kalendář -->
+    <div class="dashboard-card calendar-card">
+        <div class="card-header">
+            <h2>Kalendář dovolených</h2>
+            <div class="card-tools">
+                <span class="card-legend">
+                    <span class="legend-item"><span class="legend-color" style="background-color: #28a745;"></span> Schváleno</span>
+                    <span class="legend-item"><span class="legend-color" style="background-color: #ffc107;"></span> Čeká na schválení</span>
+                    <span class="legend-item"><span class="legend-color" style="background-color: #dc3545;"></span> Zamítnuto</span>
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="calendar" class="dashboard-calendar"></div>
         </div>
     </div>
-    {* --- Konec modálního okna --- *}
 
+    <!-- Tabulka žádostí -->
+    <div class="dashboard-card requests-card">
+        <div class="card-header">
+            <h2>Moje žádosti o dovolenou</h2>
+        </div>
+        <div class="card-body">
+            {if count($myRequests) > 0}
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Období</th>
+                                <th>Dny</th>
+                                <th>Typ</th>
+                                <th>Stav</th>
+                                <th>Poznámka</th>
+                                <th>Podáno</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr n:foreach="$myRequests as $request" class="status-{$request->status}-row">
+                                <td>
+                                    <div class="date-range">
+                                        <div class="date-item">
+                                            <span class="date-main">{$request->start_date|date:'j. n. Y'}</span>
+                                            <span class="date-detail">
+                                                {$request->start_day_portion
+                                                    |replace:'FULL_DAY', 'celý den'
+                                                    |replace:'AM_HALF_DAY', 'dop. půlden'
+                                                    |replace:'PM_HALF_DAY', 'odp. půlden'
+                                                }
+                                            </span>
+                                        </div>
+                                        <div class="date-separator">—</div>
+                                        <div class="date-item">
+                                            <span class="date-main">{$request->end_date|date:'j. n. Y'}</span>
+                                            <span class="date-detail">
+                                                {$request->end_day_portion
+                                                    |replace:'FULL_DAY', 'celý den'
+                                                    |replace:'AM_HALF_DAY', 'dop. půlden'
+                                                    |replace:'PM_HALF_DAY', 'odp. půlden'
+                                                }
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-right">{$request->calculated_duration_days|number:1,',',' '}</td>
+                                <td>
+                                    <span class="badge badge-{$request->type}">
+                                        {$request->type
+                                            |replace:'vacation', 'Dovolená'
+                                            |replace:'sick_leave', 'Nemocenská'
+                                            |replace:'other', 'Jiné'
+                                        }
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-status-{$request->status}">
+                                        {$request->status
+                                            |replace:'approved', 'Schváleno'
+                                            |replace:'pending', 'Čeká na schválení'
+                                            |replace:'rejected', 'Zamítnuto'
+                                        }
+                                    </span>
+                                </td>
+                                <td class="note-cell">
+                                    {if $request->note}
+                                        <span class="note-tooltip" data-tooltip="{$request->note}">
+                                            {$request->note|truncate:30}
+                                        </span>
+                                    {else}
+                                        -
+                                    {/if}
+                                </td>
+                                <td class="date-cell">{$request->created_at|date:'j.n.Y H:i'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {else}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64">
+                            <path fill="none" d="M0 0h24v24H0z"/>
+                            <path d="M20 22H4C3.44772 22 3 21.5523 3 21V3C3 2.44772 3.44772 2 4 2H20C20.5523 2 21 2.44772 21 3V21C21 21.5523 20.5523 22 20 22ZM19 20V4H5V20H19ZM8 7H16V9H8V7ZM8 11H16V13H8V11ZM8 15H13V17H8V15Z"/>
+                        </svg>
+                    </div>
+                    <p>Zatím nemáte žádné žádosti o dovolenou.</p>
+                    <a n:href="Vacation:newRequest" class="action-button primary">Vytvořit první žádost</a>
+                </div>
+            {/if}
+        </div>
+    </div>
+</div>
+
+{* --- Modální okno pro detail události --- *}
+<div id="eventDetailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Detail žádosti</h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="modal-info-grid">
+                <div class="info-group">
+                    <div class="info-label">Žadatel</div>
+                    <div class="info-value" id="modalUserName">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Typ</div>
+                    <div class="info-value" id="modalType">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Stav</div>
+                    <div class="info-value" id="modalStatus">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Od</div>
+                    <div class="info-value" id="modalStartDate">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Do</div>
+                    <div class="info-value" id="modalEndDate">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Délka</div>
+                    <div class="info-value" id="modalDuration">-</div>
+                </div>
+                <div class="info-group full-width">
+                    <div class="info-label">Poznámka</div>
+                    <div class="info-value note-text" id="modalNote">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Podáno dne</div>
+                    <div class="info-value" id="modalRequestedAt">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {/block}
 
 {block scripts}
-    {* Ujisti se, že cesta a název souboru odpovídá tomu, co jsi nahrál (např. index.global.min.js z dist/) *}
     <script src="{$basePath}/js/fullcalendar/index.global.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             var modal = document.getElementById('eventDetailModal');
-            var modalCloseButton = modal.querySelector('.close-button'); // Selektor pro tlačítko zavření
+            var modalCloseButton = modal.querySelector('.close-button');
 
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
+                height: 'auto',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listYear'
+                    right: 'dayGridMonth,timeGridWeek,listMonth'
                 },
-                events: {$calendarEventsJson|noescape}, // Načteme události z PHP (JSON)
+                events: {$calendarEventsJson|noescape},
                 locale: 'cs',
                 buttonText: {
-                    today:    'Dnes',
-                    month:    'Měsíc',
-                    week:     'Týden',
-                    day:      'Den',
-                    list:     'Seznam roku' // Můžeš přeložit i 'listYear' pokud ho budeš používat
+                    today: 'Dnes',
+                    month: 'Měsíc',
+                    week: 'Týden',
+                    listMonth: 'Seznam'
                 },
-                firstDay: 1, // Pondělí jako první den v týdnu
-                // businessHours: true, // Můžeš odkomentovat pro zobrazení pracovní doby
-                // weekends: true,     // Zobrazovat víkendy (výchozí)
-                // eventMinHeight: 20, // Minimální výška události v časové mřížce
-
+                firstDay: 1,
                 eventClick: function(info) {
-                    var props = info.event.extendedProps; // Zkrácení přístupu
+                    var props = info.event.extendedProps;
 
                     document.getElementById('modalTitle').innerText = 'Detail: ' + info.event.title;
                     document.getElementById('modalUserName').innerText = props.userName || '-';
@@ -155,11 +254,10 @@
                     document.getElementById('modalRequestedAt').innerText = props.requestedAt || '-';
 
                     modal.style.display = 'block';
-                    info.jsEvent.preventDefault(); // Zabrání výchozí akci, pokud by událost byla odkazem
+                    info.jsEvent.preventDefault();
                 }
             });
 
-            // Funkcionalita pro zavírání modálního okna
             if (modalCloseButton) {
                 modalCloseButton.onclick = function() {
                     modal.style.display = 'none';
@@ -167,12 +265,35 @@
             }
 
             window.onclick = function(event) {
-                if (event.target == modal) { // Zavře, jen pokud se klikne na pozadí (overlay)
+                if (event.target == modal) {
                     modal.style.display = 'none';
                 }
             }
 
             calendar.render();
+            
+            // Tooltip funkce pro poznámky
+            const tooltips = document.querySelectorAll('.note-tooltip');
+            tooltips.forEach(tooltip => {
+                tooltip.addEventListener('mouseenter', e => {
+                    const tooltipText = e.target.getAttribute('data-tooltip');
+                    if(!tooltipText) return;
+                    
+                    const tooltipEl = document.createElement('div');
+                    tooltipEl.className = 'tooltip-box';
+                    tooltipEl.innerText = tooltipText;
+                    document.body.appendChild(tooltipEl);
+                    
+                    const rect = e.target.getBoundingClientRect();
+                    tooltipEl.style.left = rect.left + (rect.width / 2) - (tooltipEl.offsetWidth / 2) + 'px';
+                    tooltipEl.style.top = rect.bottom + 10 + 'px';
+                });
+                
+                tooltip.addEventListener('mouseleave', () => {
+                    const tooltipEl = document.querySelector('.tooltip-box');
+                    if(tooltipEl) tooltipEl.remove();
+                });
+            });
         });
     </script>
 {/block}

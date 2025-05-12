@@ -17,12 +17,28 @@ abstract class AdminBasePresenter extends BasePresenter
         parent::startup();
 
         if (!$this->getUser()->isLoggedIn()) {
-            $this->redirect('Login:default', ['backlink' => $this->storeRequest()]);
+            // Explicitní správné přesměrování mimo Admin modul
+            $this->flashMessage('Pro vstup do administrace se musíte přihlásit.', 'warning');
+            $this->redirectUrl($this->link(':Login:default', ['backlink' => $this->storeRequest()]));
         }
 
         if (!$this->getUser()->isInRole('admin')) {
-    $this->flashMessage('Přístup do administrace je povolen pouze administrátorům.', 'danger');
-    $this->redirect('Dashboard:default');
-}
+            $this->flashMessage('Přístup do administrace je povolen pouze administrátorům.', 'danger');
+            $this->redirectUrl($this->link(':Dashboard:default'));
+        }
     }
+    
+    //* Akce pro odhlášení uživatele z administrace.
+ 
+public function handleLogout(): void
+{
+    // Nejprve nastavíme flash zprávu
+    $this->getPresenter()->flashMessage('Byli jste úspěšně odhlášeni.', 'success');
+    
+    // Poté se odhlásíme
+    $this->getUser()->logout(true);
+    
+    // A nakonec přesměrujeme na přihlašovací stránku
+    $this->getPresenter()->redirect(':Login:default');
+}
 }

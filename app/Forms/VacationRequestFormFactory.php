@@ -19,7 +19,6 @@ final class VacationRequestFormFactory
         $form->addText('start_date', 'Datum od:')
             ->setHtmlType('date')
             ->setRequired('Prosím, zadejte datum začátku dovolené.')
-            // ->addRule(Form::VALID, 'Datum od není platné.') // TOTO ODSTRANÍME
             ->setDefaultValue((new DateTime())->format('Y-m-d'));
 
         $dayPortionItems = [
@@ -35,24 +34,22 @@ final class VacationRequestFormFactory
         $form->addText('end_date', 'Datum do:')
             ->setHtmlType('date')
             ->setRequired('Prosím, zadejte datum konce dovolené.')
-            // ->addRule(Form::VALID, 'Datum do není platné.') // TOTO ODSTRANÍME
-            ->addRule(function (Nette\Forms\Controls\TextInput $input) { // Upravena anonymní funkce pro validaci
-                $form = $input->getForm(); // Získáme formulář
-                if (!isset($form['start_date'])) { // Ochrana, pokud by start_date neexistoval
+            ->addRule(function (Nette\Forms\Controls\TextInput $input) {
+                $form = $input->getForm();
+                if (!isset($form['start_date'])) {
                     return true;
                 }
                 $startDateInput = $form['start_date'];
-                if ($startDateInput->isFilled() && $input->isFilled()) { // Validujeme, jen pokud jsou obě pole vyplněna
+                if ($startDateInput->isFilled() && $input->isFilled()) {
                     try {
-                        // Pokusíme se vytvořit DateTime objekty pro porovnání
                         $startDate = DateTime::from($startDateInput->getValue());
                         $endDate = DateTime::from($input->getValue());
-                        return $endDate >= $startDate; // Koncové datum musí být stejné nebo pozdější než počáteční
+                        return $endDate >= $startDate;
                     } catch (\Exception $e) {
-                        return false; // Pokud dojde k chybě při parsování data, považujeme za neplatné
+                        return false;
                     }
                 }
-                return true; // Pokud jedno z polí není vyplněno, tuto validaci přeskočíme (řeší to setRequired)
+                return true;
             }, 'Datum do nesmí být před Datem od nebo neplatný formát.')
             ->setDefaultValue((new DateTime())->format('Y-m-d'));
 
@@ -65,6 +62,7 @@ final class VacationRequestFormFactory
             'sick_leave' => 'Nemocenská (Sick leave)',
             'other' => 'Jiné (uveďte v poznámce)'
         ];
+
         $form->addSelect('type', 'Typ žádosti:', $requestTypeItems)
             ->setDefaultValue('vacation')
             ->setRequired();

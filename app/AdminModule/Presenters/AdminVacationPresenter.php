@@ -50,47 +50,48 @@ class AdminVacationPresenter extends AdminBasePresenter
             return;
         }
 
+        // Načtení žádosti o dovolenou
         $request = $this->database->table('vacation_requests')->get($id);
-        
         if (!$request) {
             $this->flashMessage('Požadovaná žádost nebyla nalezena.', 'error');
             $this->redirect('this');
             return;
         }
-        
-        // Bezpečné získání numerického ID
-        $currentUserId = $this->getUser()->getId();
-        $numericUserId = is_numeric($currentUserId) 
-            ? (int)$currentUserId 
-            : $this->extractNumericId($currentUserId);
-        
-        if (!$numericUserId) {
-            throw new \Exception('Nepodařilo se určit ID uživatele.');
-        }
-        
+
+        // Získání textového ID aktuálního uživatele (např. 'USER_ADMIN_001')
+        $currentUserTextId = $this->getUser()->getId(); // Přímo textové ID
+
         if ($request->status !== 'pending') {
             $this->flashMessage('Žádost již byla zpracována (stav: ' . $request->status . ').', 'warning');
             $this->redirect('this');
             return;
         }
-        
+
+        // Zahájení transakce
         $this->database->beginTransaction();
-        
+
+        // Aktualizace žádosti o dovolenou
         $request->update([
             'status' => 'approved',
             'approved_at' => new \DateTime(),
-            'approved_by' => $numericUserId, // Použití numerického ID
+            'approved_by' => $currentUserTextId, // Přímo textové ID
         ]);
-        
+
+        // Potvrzení transakce
         $this->database->commit();
         $this->flashMessage('Žádost byla úspěšně schválena.', 'success');
-        
     } catch (\Exception $e) {
-        $this->database->rollBack();
+        // Vrácení transakce, pokud existuje
+        if ($this->database->getConnection()->getPdo()->inTransaction()) {
+            $this->database->rollBack();
+        }
+
+        // Záznam chyby a zobrazení uživateli
         \Tracy\Debugger::log($e, \Tracy\Debugger::EXCEPTION);
         $this->flashMessage('Při schvalování žádosti došlo k chybě: ' . $e->getMessage(), 'error');
     }
-    
+
+    // Přesměrování
     $this->redirect('this');
 }
 
@@ -112,47 +113,49 @@ public function handleReject($id): void
             return;
         }
 
+        // Načtení žádosti o dovolenou
         $request = $this->database->table('vacation_requests')->get($id);
-        
         if (!$request) {
             $this->flashMessage('Požadovaná žádost nebyla nalezena.', 'error');
             $this->redirect('this');
             return;
         }
-        
-        // Bezpečné získání numerického ID
-        $currentUserId = $this->getUser()->getId();
-        $numericUserId = is_numeric($currentUserId) 
-            ? (int)$currentUserId 
-            : $this->extractNumericId($currentUserId);
-        
-        if (!$numericUserId) {
-            throw new \Exception('Nepodařilo se určit ID uživatele.');
-        }
-        
+
+        // Kontrola stavu žádosti
         if ($request->status !== 'pending') {
             $this->flashMessage('Žádost již byla zpracována (stav: ' . $request->status . ').', 'warning');
             $this->redirect('this');
             return;
         }
-        
+
+        // Získání textového ID aktuálního uživatele (např. 'USER_ADMIN_001')
+        $currentUserTextId = $this->getUser()->getId();
+
+        // Zahájení transakce
         $this->database->beginTransaction();
-        
+
+        // Aktualizace žádosti o dovolenou
         $request->update([
             'status' => 'rejected',
-            'rejected_at' => new \DateTime(),
-            'rejected_by' => $numericUserId, // Použití numerického ID
+            'approved_at' => new \DateTime(), // Zaznamenání času zamítnutí
+            'approved_by' => $currentUserTextId, // Textové ID uživatele, který zamítl žádost
         ]);
-        
+
+        // Potvrzení transakce
         $this->database->commit();
-        $this->flashMessage('Žádost byla zamítnuta.', 'warning');
-        
+        $this->flashMessage('Žádost byla úspěšně zamítnuta.', 'success');
     } catch (\Exception $e) {
-        $this->database->rollBack();
+        // Vrácení transakce, pokud existuje
+        if ($this->database->getConnection()->getPdo()->inTransaction()) {
+            $this->database->rollBack();
+        }
+
+        // Záznam chyby a zobrazení uživateli
         \Tracy\Debugger::log($e, \Tracy\Debugger::EXCEPTION);
-        $this->flashMessage('Při zamítání žádosti došlo k chybě: ' . $e->getMessage(), 'error');
+        $this->flashMessage('Při zamítnutí žádosti došlo k chybě: ' . $e->getMessage(), 'error');
     }
-    
+
+    // Přesměrování
     $this->redirect('this');
 }
 }

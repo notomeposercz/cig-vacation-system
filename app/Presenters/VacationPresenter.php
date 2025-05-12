@@ -43,58 +43,45 @@ final class VacationPresenter extends BasePresenter
      * Zpracuje úspěšné odeslání formuláře.
      */
     public function requestFormSucceeded(Form $form, \stdClass $values): void
-    {
-        $userId = $this->getUser()->getId();
-        \Tracy\Debugger::log("requestFormSucceeded: User ID = {$userId}", 'form-debug');
+{
+    $userId = $this->getUser()->getId();
 
-        // Převedeme Nette\Utils\DateTime na DateTimeImmutable pro naši službu
-        $startDate = DateTimeImmutable::fromMutable($values->start_date);
-        $endDate = DateTimeImmutable::fromMutable($values->end_date);
-        $startHalfDay = $values->start_day_portion === 'PM_HALF_DAY';
-        $endHalfDay = $values->end_day_portion === 'AM_HALF_DAY';
+    // Oprava chyby: Použití konstruktoru místo neexistující metody fromMutable
+    $startDate = new \DateTimeImmutable($values->start_date);
+    $endDate = new \DateTimeImmutable($values->end_date);
 
-        // Použijeme naši VacationCalculatorService k výpočtu délky dovolené
-        $calculatedDurationDays = $this->vacationCalculatorService->calculateVacationDays(
-            $startDate,
-            $endDate,
-            $startHalfDay,
-            $endHalfDay
-        );
+    $startHalfDay = $values->start_day_portion === 'PM_HALF_DAY';
+    $endHalfDay = $values->end_day_portion === 'AM_HALF_DAY';
 
-        // Zaokrouhlení na jedno desetinné místo pro uložení do databáze
-        $roundedDuration = round($calculatedDurationDays, 1);
-        \Tracy\Debugger::log("requestFormSucceeded: Calculated duration = {$roundedDuration} days", 'form-debug');
+    $calculatedDurationDays = $this->vacationCalculatorService->calculateVacationDays(
+        $startDate,
+        $endDate,
+        $startHalfDay,
+        $endHalfDay
+    );
 
-        try {
-            \Tracy\Debugger::log("requestFormSucceeded: Attempting database insert.", 'form-debug');
-            $this->database->table('vacation_requests')->insert([
-                'user_id' => $userId,
-                'start_date' => $values->start_date,
-                'end_date' => $values->end_date,
-                'start_day_portion' => $values->start_day_portion,
-                'end_day_portion' => $values->end_day_portion,
-                'type' => $values->type,
-                'status' => 'pending',
-                'note' => $values->note,
-                'calculated_duration_days' => $roundedDuration
-            ]);
-            \Tracy\Debugger::log("requestFormSucceeded: Database insert SUCCEEDED.", 'form-debug');
+    $roundedDuration = round($calculatedDurationDays, 1);
 
-            $this->flashMessage('Vaše žádost o dovolenou byla úspěšně odeslána.', 'success');
-            \Tracy\Debugger::log("requestFormSucceeded: Flash message set. Attempting redirect to Dashboard:default.", 'form-debug');
+    try {
+        $this->database->table('vacation_requests')->insert([
+            'user_id' => $userId,
+            'start_date' => $values->start_date,
+            'end_date' => $values->end_date,
+            'start_day_portion' => $values->start_day_portion,
+            'end_day_portion' => $values->end_day_portion,
+            'type' => $values->type,
+            'status' => 'pending',
+            'note' => $values->note,
+            'calculated_duration_days' => $roundedDuration
+        ]);
 
-            $this->redirect('Dashboard:default');
+        $this->flashMessage('Vaše žádost o dovolenou byla úspěšně odeslána.', 'success');
+        $this->redirect('Dashboard:default');
 
-        } catch (Nette\Application\AbortException $e) {
-            \Tracy\Debugger::log("requestFormSucceeded: AbortException caught and re-thrown for redirect.", 'form-debug');
-            throw $e;
-        } catch (\Exception $e) {
-            \Tracy\Debugger::log("requestFormSucceeded: GENERIC EXCEPTION CAUGHT!", 'form-debug-error');
-            \Tracy\Debugger::log($e, \Tracy\ILogger::EXCEPTION);
-            $form->addError('Při ukládání žádosti došlo k chybě. Zkuste to prosím znovu.');
-        }
+    } catch (\Exception $e) {
+        $form->addError('Při ukládání žádosti došlo k chybě. Zkuste to prosím znovu.');
     }
-
+}
     /**
      * Akce pro zobrazení formuláře
      */

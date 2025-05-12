@@ -61,21 +61,12 @@
             
             {snippet settingsFormSnippet}
     <div id="settingsForm">
-        {* Debug sekce pro administrátora *}
-        {if $user->isInRole('admin')}
-            <div class="debug-info" style="background:#f8f9fa; padding:5px; margin-bottom:10px; font-size:12px; border:1px solid #ddd;">
-                Debug info (pouze pro admina): ID uživatele v modálu: 
-                {var $formControl = $control['vacationSettingsForm']}
-                {if $formControl && isset($formControl['user_id'])}
-                    {$formControl['user_id']->value}
-                {else}
-                    <span style="color:red">Pole user_id neexistuje ve formuláři!</span>
-                {/if}
-            </div>
-        {/if}
-        
-        {* Přímé vykreslení formuláře *}
         {control vacationSettingsForm}
+{if isset($form) && $form}
+    Formulář byl správně připojen.
+{else}
+    Formulář není připojen!
+{/if}
     </div>
 {/snippet}
         </div>
@@ -84,81 +75,35 @@
 
 {block scripts}
     {* Skripty pro správu uživatelů *}
-    <script>
-    function openSettingsModal(userId, userName) {
-        console.group('openSettingsModal Diagnostika');
-        console.log('ID uživatele:', userId);
-        console.log('Jméno uživatele:', userName);
-        
-        // Vylepšené zpracování odpovědi
-        fetch({link editSettings!}, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: new URLSearchParams({ 
-                userId: userId 
-            })
+    <script n:syntax="off">
+    fetch({link editSettings!}, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new URLSearchParams({ 
+            userId: userId 
         })
-        .then(response => {
-            // Logging celé odpovědi pro diagnostiku
-            response.clone().text().then(text => {
-                console.log('Surová odpověď ze serveru:', text);
-                
-                // Pokus o nalezení chyb v HTML
-                const parser = new DOMParser();
-                const htmlDoc = parser.parseFromString(text, 'text/html');
-                const errorElements = htmlDoc.querySelectorAll('.error, .alert-danger, [style*="color:red"]');
-                if (errorElements.length) {
-                    console.warn('Nalezeny potenciální chyby v HTML odpovědi:', 
-                        Array.from(errorElements).map(el => el.textContent));
-                }
-            });
-            
-            return response.json();
-        })
-        .then(data => {
-            console.log('Zpracovaná odpověď:', data);
-            
-            if (data.success) {
-                // Úspěšně načteno
-                document.getElementById('modalTitle').innerText = 'Nastavení dovolené: ' + userName;
-                document.getElementById('settingsModal').style.display = 'block';
-                
-                // Pokus o opravu snippetu, pokud se nezobrazuje správně
-                if (data.snippets && data.snippets['snippet--settingsFormSnippet']) {
-                    const snippetContent = data.snippets['snippet--settingsFormSnippet'];
-                    console.log('Obsah snippetu:', snippetContent);
-                    
-                    // Kontrola zda formulář existuje po načtení snippetu
-                    setTimeout(() => {
-                        const formElement = document.getElementById('vacationSettingsForm');
-                        console.log('Formulář po načtení snippetu:', formElement);
-                        
-                        if (formElement) {
-                            console.log('Vstupy formuláře:', 
-                                Array.from(formElement.elements).map(e => e.name + ':' + e.value));
-                        }
-                    }, 100);
-                }
-            } else {
-                console.warn('Chyba z API:', data.message);
-                alert(data.message || 'Nastala neočekávaná chyba');
-            }
-        })
-        .catch(error => {
-            console.error('Kritická chyba:', error);
-            alert('Nepodařilo se zpracovat požadavek. Zkuste to prosím znovu.');
-        })
-        .finally(() => {
-            console.groupEnd();
-        });
-    }
-
-    // Pomocná funkce pro zavření modálu
-    function closeModal() {
-        document.getElementById('settingsModal').style.display = 'none';
-    }
-    </script>
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            document.getElementById('modalTitle').innerText = `Nastavení dovolené: ${userName}`;
+            document.getElementById('settingsModal').style.display = 'block';
+        } else {
+            console.warn('Chyba z API:', data.message);
+            alert(data.message || 'Nastala neočekávaná chyba');
+        }
+    })
+    .catch(error => {
+        console.error('Kritická chyba:', error);
+        alert('Nepodařilo se zpracovat požadavek. Zkuste to prosím znovu.');
+    });
+</script>
 {/block}

@@ -29,7 +29,7 @@
                     
                     {* Výpočet vyčerpaných dnů *}
                     {foreach $userItem->related('vacation_requests', 'user_id')->where('status', 'approved')->where('YEAR(start_date)', $currentYear) as $req}
-                        {var $daysTaken = $daysTaken + $req->calculated_duration_days}
+                        {php $daysTaken += $req->calculated_duration_days}
                     {/foreach}
                     
                     {var $remainingDays = ($totalDays + $carriedDays) - $daysTaken}
@@ -61,12 +61,11 @@
             
             {snippet settingsFormSnippet}
     <div id="settingsForm">
-        {control vacationSettingsForm}
-{if isset($form) && $form}
-    Formulář byl správně připojen.
-{else}
-    Formulář není připojen!
-{/if}
+        {if isset($control['vacationSettingsForm'])}
+            {control vacationSettingsForm}
+        {else}
+            <p class="error">Formulář není připojen!</p>
+        {/if}
     </div>
 {/snippet}
         </div>
@@ -76,34 +75,35 @@
 {block scripts}
     {* Skripty pro správu uživatelů *}
     <script n:syntax="off">
-    fetch({link editSettings!}, {
+        let isModalLoading = false;
+        function openSettingsModal(userId, userName) {
+    fetch('/admin/users/editSettings!', { // Ověřte, že tato URL odpovídá správnému presenteru
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-Requested-With': 'XMLHttpRequest'
         },
-        body: new URLSearchParams({ 
-            userId: userId 
-        })
+        body: new URLSearchParams({ userId: userId })
     })
     .then(response => {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json();
+        return response.text();
     })
-    .then(data => {
-        if (data.success) {
-            document.getElementById('modalTitle').innerText = `Nastavení dovolené: ${userName}`;
-            document.getElementById('settingsModal').style.display = 'block';
-        } else {
-            console.warn('Chyba z API:', data.message);
-            alert(data.message || 'Nastala neočekávaná chyba');
-        }
+    .then(html => {
+        document.getElementById('settingsForm').innerHTML = html;
+        document.getElementById('modalTitle').innerText = `Nastavení dovolené: ${userName}`;
+        document.getElementById('settingsModal').style.display = 'block';
     })
     .catch(error => {
-        console.error('Kritická chyba:', error);
-        alert('Nepodařilo se zpracovat požadavek. Zkuste to prosím znovu.');
+        console.error('Chyba při načítání formuláře:', error);
+        alert('Nepodařilo se načíst formulář. Zkuste to prosím znovu.');
     });
-</script>
+}
+
+        function closeModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+    </script>
 {/block}

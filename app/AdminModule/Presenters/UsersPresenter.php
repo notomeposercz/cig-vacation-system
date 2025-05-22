@@ -23,14 +23,34 @@ class UsersPresenter extends AdminBasePresenter
     }
 
     public function renderDefault(): void
-    {
-        $currentYear = (int)date('Y');
+{
+    // Kontrola, zda byl právě aktualizován uživatel
+    $updatedUser = $this->getParameter('userUpdated');
+    $totalDays = $this->getParameter('totalDays');
+    $carriedDays = $this->getParameter('carriedDays');
+    
+    if ($updatedUser !== null) {
+        // Odstraníme případné uvozovky ze jména
+        $updatedUser = str_replace(['"', '"', '"'], '', $updatedUser);
         
-        $this->template->users = $this->database->table('users')
-            ->order('last_name ASC');
+        $message = "Nárok na dovolenou pro uživatele $updatedUser byl upraven na $totalDays dní";
+        if ((float)$carriedDays > 0) {
+            $message .= " (+ $carriedDays dní z minulého roku)";
+        }
+        $this->flashMessage($message, 'success');
         
-        $this->template->currentYear = $currentYear;
+        // Přesměrování na stejnou stránku bez parametrů, aby se nezobrazila duplicitní zpráva při refreshi
+        $this->redirect('this');
+        return; // Důležité - ukončíme metodu zde, aby se nepokračovalo dále
     }
+    
+    $currentYear = (int)date('Y');
+    
+    $this->template->users = $this->database->table('users')
+        ->order('last_name ASC');
+    
+    $this->template->currentYear = $currentYear;
+}
     
     protected function createComponentVacationSettingsForm(): Form
 {
@@ -110,94 +130,125 @@ class UsersPresenter extends AdminBasePresenter
     
     public function handleEditSettings(): void 
 {
+    if (!$this->isAjax()) {
+        $this->redirect('this');
+        return;
+    }
+
+    // Získání ID uživatele a debugging
+    $userId = $this->getHttpRequest()->getPost('userId');
+    \Tracy\Debugger::log("Získané userId: '$userId'", 'ajax-log');
+    
+    // Důležité: odstranit případné uvozovky, které se mohly dostat do ID
+    $userId = trim($userId, '"\'');
+    \Tracy\Debugger::log("Očištěné userId: '$userId'", 'ajax-log');
+    
+    if (empty($userId)) {
+        \Tracy\Debugger::log("Prázdné userId", 'ajax-error');
+        $this->sendJson(['error' => 'Chybí ID uživatele']);
+        return;
+    }
+    
+    // Načtení uživatele s detailnějším logováním
+    $user = $this->database->table('users')->get($userId);
+    if (!$user) {
+        \Tracy\Debugger::log("Uživatel s ID '$userId' nebyl nalezen v databázi", 'ajax-error');
+        
+        // Pro debugging vypíšeme všechna existující ID uživatelů
+        $allUserIds = [];
+        foreach ($this->database->table('users') as $u) {
+            $allUserIds[] = $u->id;
+        }
+        \Tracy\Debugger::log("Existující ID uživatelů: " . implode(", ", $allUserIds), 'ajax-log');
+        
+        $this->sendJson(['error' => 'Uživatel nebyl nalezen']);
+        return;
+    }
+    
+    \Tracy\Debugger::log("Uživatel nalezen: {$user->first_name} {$user->last_name}", 'ajax-log');
+    
+    $currentYear = (int)date('Y');
+    
+    // Načtení nastavení dovolené
+    $settings = $this->database->table('vacation_settings')
+        ->where('user_id', $userId)
+        ->where('year', $currentYear)
+        ->fetch();
+    
+    // Příprava dat pro formulář
+    $formData = [
+        'userId' => $userId,
+        'userName' => $user->first_name . ' ' . $user->last_name,
+        'totalDays' => $settings ? $settings->total_days : 20,
+        'carriedDays' => $settings ? $settings->carried_days : 0,
+        'year' => $currentYear
+    ];
+    
+    \Tracy\Debugger::log("Odesílaná data: " . json_encode($formData), 'ajax-log');
+    
+    // Odeslání dat ve formátu JSON
+    $this->sendJson($formData);
+}
+
+public function handleSaveSettings(): void
+{
+    // Prohlížeč očekává určitý formát odpovědi, ne pouze JSON
+    $this->getHttpResponse()->setContentType('application/json');
+    
     try {
-        // Získání a příprava userId
-        $userId = $this->getHttpRequest()->getPost('userId');
+        // Získání dat z formuláře
+        $userId = $this->getHttpRequest()->getPost('user_id');
         $userId = trim($userId, '"\'');
+        $year = (int)$this->getHttpRequest()->getPost('year');
+        $totalDays = (float)$this->getHttpRequest()->getPost('total_days');
+        $carriedDays = (float)$this->getHttpRequest()->getPost('carried_days');
         
-        // Rozšířené logování
-        \Tracy\Debugger::log("Přijaté userId po úpravě: '$userId'", 'user-debug');
+        \Tracy\Debugger::log("Zpracovaná data: userId='$userId', year=$year, totalDays=$totalDays, carriedDays=$carriedDays", 'ajax-log');
         
-        // Základní validace
-        if (!$this->isAjax()) {
-            $this->payload->error = true;
-            $this->payload->message = 'Neplatný požadavek - není AJAX';
-            $this->sendPayload();
-            return;
-        }
-
-        // Validace formátu ID
-        if (!$userId || !preg_match('/^USER_[A-Za-z0-9_]+$/', $userId)) {
-            \Tracy\Debugger::log("Neplatný formát ID: '$userId'", 'user-error');
-            $this->payload->error = true;
-            $this->payload->message = 'Neplatný identifikátor uživatele';
-            $this->sendPayload();
-            return;
-        }
-
-        // Načtení uživatele
-        $user = $this->database->table('users')
-            ->where('id', $userId)
-            ->fetch();
-
+        // Kontrola existence uživatele
+        $user = $this->database->table('users')->get($userId);
         if (!$user) {
-            \Tracy\Debugger::log("Uživatel nenalezen: '$userId'", 'user-critical');
-            $this->payload->error = true;
-            $this->payload->message = 'Uživatel nebyl nalezen';
-            $this->sendPayload();
-            return;
+            \Tracy\Debugger::log("Uživatel s ID '$userId' nebyl nalezen v databázi", 'ajax-error');
+            echo json_encode(['status' => 'error', 'message' => 'Uživatel nebyl nalezen']);
+            exit;
         }
-
-        $currentYear = (int)date('Y');
-
-        // Načtení nastavení dovolené
-        $settings = $this->database->table('vacation_settings')
+        
+        // Uložení dat
+        $this->database->beginTransaction();
+        
+        $existingSettings = $this->database->table('vacation_settings')
             ->where('user_id', $userId)
-            ->where('year', $currentYear)
+            ->where('year', $year)
             ->fetch();
-        
-        // Zásadní změna: Nejprve zkontrolujeme, zda komponenta existuje
-        if (!isset($this['vacationSettingsForm'])) {
-            \Tracy\Debugger::log("Komponenta formuláře neexistuje!", 'form-critical');
-            // Vytvoření komponenty, pokud neexistuje
-            $this->createComponent('vacationSettingsForm');
-        }
-        
-        // Nyní bezpečně přistupujeme ke komponentě
-        $form = $this['vacationSettingsForm'];
-        
-        // Další diagnostika
-        \Tracy\Debugger::log("Typ formuláře: " . get_class($form), 'form-debug');
-        \Tracy\Debugger::log("Dostupné metody: " . implode(', ', get_class_methods($form)), 'form-debug');
-        
-        // Připravíme defaultní hodnoty jako pole (bezpečnější přístup)
-        $defaults = [
-            'user_id' => $userId,
-            'year' => $currentYear,
-            'total_days' => $settings ? $settings->total_days : 20,
-            'carried_days' => $settings ? $settings->carried_days : 0,
+            
+        $settingsData = [
+            'total_days' => $totalDays,
+            'carried_days' => $carriedDays,
         ];
         
-        // Použijeme setDefaults místo individuálního nastavení
-        try {
-            $form->setDefaults($defaults);
-            \Tracy\Debugger::log("Výchozí hodnoty byly nastaveny: " . json_encode($defaults), 'form-debug');
-        } catch (\Exception $e) {
-            \Tracy\Debugger::log("Chyba při nastavování výchozích hodnot: " . $e->getMessage(), 'form-error');
+        if ($existingSettings) {
+            $existingSettings->update($settingsData);
+        } else {
+            $settingsData['user_id'] = $userId;
+            $settingsData['year'] = $year;
+            $this->database->table('vacation_settings')->insert($settingsData);
         }
         
-        // Odpověď klientovi
-        $this->payload->userId = $userId;
-        $this->payload->userName = $user->first_name . ' ' . $user->last_name;
-        $this->payload->success = true;
+        $this->database->commit();
+        \Tracy\Debugger::log("Nastavení úspěšně uloženo", 'ajax-log');
         
-        $this->redrawControl('settingsFormSnippet');
+        echo json_encode(['status' => 'success', 'message' => 'Nastavení bylo úspěšně uloženo']);
+        exit;
         
     } catch (\Exception $e) {
-        \Tracy\Debugger::log("Kritická chyba: " . $e->getMessage(), 'user-error');
-        \Tracy\Debugger::log("Stack trace: " . $e->getTraceAsString(), 'user-error');
-        $this->payload->error = true;
-        $this->payload->message = "Chyba: " . $e->getMessage();
-        $this->sendPayload();
+        // Kontrola, zda je aktivní transakce, než se ji pokusíme vrátit zpět
+        if ($this->database->getConnection()->getPdo()->inTransaction()) {
+            $this->database->rollBack();
+        }
+        
+        \Tracy\Debugger::log("Chyba při ukládání: " . $e->getMessage() . "\n" . $e->getTraceAsString(), 'ajax-error');
+        echo json_encode(['status' => 'error', 'message' => 'Chyba: ' . $e->getMessage()]);
+        exit;
     }
-}}
+}
+}

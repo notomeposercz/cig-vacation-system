@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Počítač: db.dw189.webglobe.com
--- Vytvořeno: Pon 12. kvě 2025, 10:55
+-- Vytvořeno: Čtv 22. kvě 2025, 14:24
 -- Verze serveru: 8.0.41-32
 -- Verze PHP: 8.1.32
 
@@ -106,20 +106,21 @@ CREATE TABLE `users` (
   `department_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `role` enum('admin','manager','employee') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'employee',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `user_code` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Vypisuji data pro tabulku `users`
 --
 
-INSERT INTO `users` (`id`, `email`, `password_hash`, `first_name`, `last_name`, `department_id`, `role`, `created_at`, `updated_at`) VALUES
-('USER_ADMIN_001', 'admin@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Admin', 'Systémový', 'DEPT_IT_001', 'admin', '2025-05-07 21:19:16', '2025-05-07 21:19:16'),
-('USER_EMP_004', 'tomas.dvorak@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Tomáš', 'Dvořák', 'DEPT_IT_001', 'employee', '2025-05-07 21:19:16', '2025-05-07 21:19:16'),
-('USER_EMP_005', 'lucie.novotna@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Lucie', 'Novotná', 'DEPT_FIN_003', 'employee', '2025-05-07 21:19:16', '2025-05-07 21:19:16'),
-('USER_EMP_006', 'martin.cerny@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Martin', 'Černý', 'DEPT_MKT_004', 'employee', '2025-05-07 21:19:16', '2025-05-07 21:19:16'),
-('USER_MGR_002', 'jan.novak@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Jan', 'Novák', 'DEPT_IT_001', 'manager', '2025-05-07 21:19:16', '2025-05-07 21:19:16'),
-('USER_MGR_003', 'petra.svobodova@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Petra', 'Svobodová', 'DEPT_HR_002', 'manager', '2025-05-07 21:19:16', '2025-05-07 21:19:16');
+INSERT INTO `users` (`id`, `email`, `password_hash`, `first_name`, `last_name`, `department_id`, `role`, `created_at`, `updated_at`, `user_code`) VALUES
+('USER_ADMIN_001', 'admin@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Admin', 'Systémový', 'DEPT_IT_001', 'admin', '2025-05-07 21:19:16', '2025-05-12 12:24:12', 'USER_ADMIN_001'),
+('USER_EMP_004', 'tomas.dvorak@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Tomáš', 'Dvořák', 'DEPT_IT_001', 'employee', '2025-05-07 21:19:16', '2025-05-12 12:24:12', 'USER_EMP_004'),
+('USER_EMP_005', 'lucie.novotna@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Lucie', 'Novotná', 'DEPT_FIN_003', 'employee', '2025-05-07 21:19:16', '2025-05-12 12:24:12', 'USER_EMP_005'),
+('USER_EMP_006', 'martin.cerny@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Martin', 'Černý', 'DEPT_MKT_004', 'employee', '2025-05-07 21:19:16', '2025-05-12 12:24:12', 'USER_EMP_006'),
+('USER_MGR_002', 'jan.novak@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Jan', 'Novák', 'DEPT_IT_001', 'manager', '2025-05-07 21:19:16', '2025-05-12 12:24:12', 'USER_MGR_002'),
+('USER_MGR_003', 'petra.svobodova@cig.cz', '$2y$10$0gvsg48.wrXoUNsp44CGQeoyFu/5.j5IkWUKMVaVCfuNTtUcnAwq6', 'Petra', 'Svobodová', 'DEPT_HR_002', 'manager', '2025-05-07 21:19:16', '2025-05-12 12:24:12', 'USER_MGR_003');
 
 --
 -- Triggery `users`
@@ -194,7 +195,7 @@ CREATE TABLE `vacation_requests` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `approved_at` datetime DEFAULT NULL,
-  `approved_by` int UNSIGNED DEFAULT NULL,
+  `approved_by` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `rejected_at` datetime DEFAULT NULL,
   `rejected_by` int UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -204,13 +205,18 @@ CREATE TABLE `vacation_requests` (
 --
 
 INSERT INTO `vacation_requests` (`id`, `user_id`, `start_date`, `end_date`, `start_day_portion`, `end_day_portion`, `half_day_start`, `half_day_end`, `type`, `status`, `note`, `calculated_duration_days`, `created_at`, `updated_at`, `approved_at`, `approved_by`, `rejected_at`, `rejected_by`) VALUES
+('2354b82d-30e9-11f0-9ed7-4289ea8b509b', 'USER_ADMIN_001', '2025-06-15', '2025-06-25', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'pending', NULL, 8.0, '2025-05-14 17:30:32', '2025-05-14 17:30:32', NULL, NULL, NULL, NULL),
+('303ab3d4-2fd7-11f0-9ed7-4289ea8b509b', 'USER_ADMIN_001', '2025-05-15', '2025-05-17', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'pending', NULL, 2.0, '2025-05-13 08:49:32', '2025-05-13 08:49:32', NULL, NULL, NULL, NULL),
+('556ddd40-2f2d-11f0-9ed7-4289ea8b509b', 'USER_ADMIN_001', '2025-05-12', '2025-05-12', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'rejected', NULL, 1.0, '2025-05-12 12:33:40', '2025-05-12 12:33:48', '2025-05-12 14:33:48', 'USER_ADMIN_001', NULL, NULL),
+('641ca154-2f2c-11f0-9ed7-4289ea8b509b', 'USER_ADMIN_001', '2025-09-12', '2025-09-12', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'approved', NULL, 1.0, '2025-05-12 12:26:55', '2025-05-12 12:30:36', '2025-05-12 14:30:36', 'USER_ADMIN_001', NULL, NULL),
+('6a7b303f-2f29-11f0-9ed7-4289ea8b509b', 'USER_ADMIN_001', '2025-05-12', '2025-05-12', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'approved', 're', 1.0, '2025-05-12 12:05:37', '2025-05-12 12:30:39', '2025-05-12 14:30:39', 'USER_ADMIN_001', NULL, NULL),
 ('ee8cd1bd-2b88-11f0-9ed7-4289ea8b509b', 'USER_ADMIN_001', '2025-05-21', '2025-05-25', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'approved', 'Letní dovolená', 5.0, '2025-05-07 21:19:17', '2025-05-07 21:19:17', NULL, NULL, NULL, NULL),
-('ee94c341-2b88-11f0-9ed7-4289ea8b509b', 'USER_ADMIN_001', '2025-06-06', '2025-06-06', 'AM_HALF_DAY', 'AM_HALF_DAY', 0, 0, 'vacation', 'approved', 'Dopolední vyřizování', 0.5, '2025-05-07 21:19:17', '2025-05-12 08:50:11', '2025-05-12 10:50:11', 1, NULL, NULL),
+('ee94c341-2b88-11f0-9ed7-4289ea8b509b', 'USER_ADMIN_001', '2025-06-06', '2025-06-06', 'AM_HALF_DAY', 'AM_HALF_DAY', 0, 0, 'vacation', 'approved', 'Dopolední vyřizování', 0.5, '2025-05-07 21:19:17', '2025-05-12 08:50:11', '2025-05-12 10:50:11', '1', NULL, NULL),
 ('ee9cdb2a-2b88-11f0-9ed7-4289ea8b509b', 'USER_MGR_002', '2025-05-14', '2025-05-18', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'approved', 'Rodinná dovolená', 5.0, '2025-05-07 21:19:17', '2025-05-07 21:19:17', NULL, NULL, NULL, NULL),
 ('eea4e04a-2b88-11f0-9ed7-4289ea8b509b', 'USER_MGR_003', '2025-05-12', '2025-05-12', 'PM_HALF_DAY', 'PM_HALF_DAY', 0, 0, 'vacation', 'approved', 'Odpolední lékař', 0.5, '2025-05-07 21:19:17', '2025-05-07 21:19:17', NULL, NULL, NULL, NULL),
 ('eeacdb67-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_004', '2025-05-17', '2025-05-21', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'approved', 'Dovolená na horách', 5.0, '2025-05-07 21:19:17', '2025-05-07 21:19:17', NULL, NULL, NULL, NULL),
 ('eeb4c53e-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_004', '2025-06-01', '2025-06-01', 'FULL_DAY', 'FULL_DAY', 0, 0, 'sick_leave', 'approved', 'Plánovaná operace', 1.0, '2025-05-07 21:19:17', '2025-05-07 21:19:17', NULL, NULL, NULL, NULL),
-('eebcae56-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_005', '2025-05-27', '2025-05-31', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'pending', 'Dovolená v zahraničí', 5.0, '2025-05-07 21:19:17', '2025-05-07 21:19:17', NULL, NULL, NULL, NULL),
+('eebcae56-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_005', '2025-05-27', '2025-05-31', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'rejected', 'Dovolená v zahraničí', 5.0, '2025-05-07 21:19:17', '2025-05-12 09:01:43', NULL, NULL, '2025-05-12 11:01:43', 1),
 ('eec4c279-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_006', '2025-05-10', '2025-05-11', 'FULL_DAY', 'FULL_DAY', 0, 0, 'vacation', 'rejected', 'Náhradní volno - zamítnuto z provozních důvodů', 2.0, '2025-05-07 21:19:17', '2025-05-07 21:19:17', NULL, NULL, NULL, NULL);
 
 --
@@ -247,12 +253,12 @@ CREATE TABLE `vacation_settings` (
 --
 
 INSERT INTO `vacation_settings` (`id`, `user_id`, `year`, `total_days`, `carried_days`, `days_taken_in_year`, `created_at`, `updated_at`) VALUES
-('ee83b17d-2b88-11f0-9ed7-4289ea8b509b', 'USER_ADMIN_001', 2025, 25, 0, 0.0, '2025-05-07 21:19:16', '2025-05-07 21:19:16'),
-('ee83b442-2b88-11f0-9ed7-4289ea8b509b', 'USER_MGR_002', 2025, 25, 3, 0.0, '2025-05-07 21:19:16', '2025-05-07 21:19:16'),
-('ee83b55c-2b88-11f0-9ed7-4289ea8b509b', 'USER_MGR_003', 2025, 25, 2, 0.0, '2025-05-07 21:19:16', '2025-05-07 21:19:16'),
-('ee83b5e6-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_004', 2025, 20, 0, 0.0, '2025-05-07 21:19:16', '2025-05-07 21:19:16'),
-('ee83b659-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_005', 2025, 20, 1, 0.0, '2025-05-07 21:19:16', '2025-05-07 21:19:16'),
-('ee83b6c6-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_006', 2025, 20, 5, 0.0, '2025-05-07 21:19:16', '2025-05-07 21:19:16');
+('ee83b17d-2b88-11f0-9ed7-4289ea8b509b', 'USER_ADMIN_001', 2025, 100, 0, 0.0, '2025-05-07 21:19:16', '2025-05-13 09:18:32'),
+('ee83b442-2b88-11f0-9ed7-4289ea8b509b', 'USER_MGR_002', 2025, 58, 3, 0.0, '2025-05-07 21:19:16', '2025-05-13 08:57:22'),
+('ee83b55c-2b88-11f0-9ed7-4289ea8b509b', 'USER_MGR_003', 2025, 5, 2, 0.0, '2025-05-07 21:19:16', '2025-05-13 08:48:53'),
+('ee83b5e6-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_004', 2025, 55, 0, 0.0, '2025-05-07 21:19:16', '2025-05-13 09:33:10'),
+('ee83b659-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_005', 2025, 44, 1, 0.0, '2025-05-07 21:19:16', '2025-05-13 08:38:43'),
+('ee83b6c6-2b88-11f0-9ed7-4289ea8b509b', 'USER_EMP_006', 2025, 44, 5, 0.0, '2025-05-07 21:19:16', '2025-05-13 09:33:03');
 
 --
 -- Triggery `vacation_settings`
@@ -290,6 +296,7 @@ ALTER TABLE `refresh_tokens`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
+  ADD UNIQUE KEY `user_code` (`user_code`),
   ADD KEY `fk_users_department` (`department_id`);
 
 --

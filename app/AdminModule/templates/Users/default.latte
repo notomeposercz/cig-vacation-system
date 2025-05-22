@@ -45,8 +45,8 @@
                     </td>
                     <td>
                         <a href="#" class="btn btn-primary btn-sm" onclick="openSettingsModal('{$userItem->id}', '{$userItem->first_name} {$userItem->last_name}')">
-                            Nastavení dovolené
-                        </a>
+    Nastavení dovolené
+</a>
                     </td>
                 </tr>
             </tbody>
@@ -54,56 +54,168 @@
     </div>
 
     {* Modální okno pro nastavení dovolené *}
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeModal()">&times;</span>
-            <h2 id="modalTitle">Nastavení dovolené</h2>
-            
-            {snippet settingsFormSnippet}
-    <div id="settingsForm">
-        {if isset($control['vacationSettingsForm'])}
-            {control vacationSettingsForm}
-        {else}
-            <p class="error">Formulář není připojen!</p>
-        {/if}
-    </div>
-{/snippet}
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="modalCloseButton">&times;</span>
+        <h2 id="modalTitle">Nastavení dovolené</h2>
+        
+        <div id="settingsForm">
+            <form id="vacationSettingsForm" onsubmit="saveSettings(event)">
+                <input type="hidden" id="settings_user_id" name="user_id">
+                <input type="hidden" id="settings_year" name="year">
+                
+                <div class="form-group">
+                    <label for="settings_total_days">Nárok na dovolenou (dny):</label>
+                    <input type="number" id="settings_total_days" name="total_days" class="form-control" required step="0.5" min="0" max="100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="settings_carried_days">Převedeno z minulého roku (dny):</label>
+                    <input type="number" id="settings_carried_days" name="carried_days" class="form-control" required step="0.5" min="0" max="50">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Uložit nastavení</button>
+                </div>
+            </form>
         </div>
     </div>
-{/block}
+</div>
 
 {block scripts}
     {* Skripty pro správu uživatelů *}
     <script n:syntax="off">
-        let isModalLoading = false;
-        function openSettingsModal(userId, userName) {
-    fetch('/admin/users/editSettings!', { // Ověřte, že tato URL odpovídá správnému presenteru
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: new URLSearchParams({ userId: userId })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.text();
-    })
-    .then(html => {
-        document.getElementById('settingsForm').innerHTML = html;
-        document.getElementById('modalTitle').innerText = `Nastavení dovolené: ${userName}`;
-        document.getElementById('settingsModal').style.display = 'block';
-    })
-    .catch(error => {
-        console.error('Chyba při načítání formuláře:', error);
-        alert('Nepodařilo se načíst formulář. Zkuste to prosím znovu.');
-    });
-}
-
+        // Funkce pro zavření modálního okna
         function closeModal() {
+            console.log('Closing modal');
             document.getElementById('settingsModal').style.display = 'none';
         }
+        
+        // Funkce pro otevření modálního okna
+        function openSettingsModal(userId, userName) {
+            console.log('openSettingsModal called with:', userId, userName);
+            
+            // Odstraníme uvozovky z userName pro zobrazení v titulku
+            const cleanUserName = userName.replace(/[""]/g, '');
+            
+            // Nastavení titulku modálního okna bez uvozovek
+            document.getElementById('modalTitle').innerText = `Nastavení dovolené: ${cleanUserName}`;
+            
+            // Zobrazení modálního okna
+            document.getElementById('settingsModal').style.display = 'block';
+            
+            // Načtení dat z API
+            console.log('Sending fetch request for userId:', userId);
+            fetch(window.location.pathname + '?do=editSettings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({ userId: userId })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received data:', data);
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                // Naplnění formuláře daty
+                document.getElementById('settings_user_id').value = data.userId;
+                document.getElementById('settings_year').value = data.year;
+                document.getElementById('settings_total_days').value = data.totalDays;
+                document.getElementById('settings_carried_days').value = data.carriedDays;
+            })
+            .catch(error => {
+                console.error('Chyba při načítání dat:', error);
+                alert('Nepodařilo se načíst formulář. Zkuste to prosím znovu.');
+            });
+        }
+        
+        // Funkce pro uložení nastavení
+        function saveSettings(event) {
+            event.preventDefault();
+            console.log('saveSettings called');
+            
+            const form = document.getElementById('vacationSettingsForm');
+            const formData = new FormData(form);
+            
+            // Získáme jméno uživatele pro flash message
+            const userName = document.getElementById('modalTitle').innerText
+                .replace('Nastavení dovolené: ', '')
+                .replace(/[""]/g, '');
+            const totalDays = document.getElementById('settings_total_days').value;
+            const carriedDays = document.getElementById('settings_carried_days').value;
+            
+            fetch(window.location.pathname + '?do=saveSettings', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.text();
+            })
+            .then(text => {
+                console.log('Raw response:', text);
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse JSON:', e);
+                    throw new Error('Server returned invalid JSON');
+                }
+            })
+            .then(data => {
+                console.log('Parsed data:', data);
+                
+                if (data.status === 'success') {
+                    // Explicitně zavřeme modální okno
+                    closeModal();
+                    
+                    // Přesměrujeme s parametry pro flash message
+                    window.location.href = window.location.pathname + '?userUpdated=' + encodeURIComponent(userName) + 
+                        '&totalDays=' + encodeURIComponent(totalDays) + 
+                        '&carriedDays=' + encodeURIComponent(carriedDays);
+                } else {
+                    alert(data.message || 'Neznámá chyba');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Nepodařilo se uložit nastavení. Zkuste to prosím znovu.');
+            });
+        }
+        
+        // Nastavení event listenerů po načtení DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Setting up modal events');
+            
+            // Přidání event listeneru na křížek
+            const closeButton = document.querySelector('#settingsModal .close-button');
+            if (closeButton) {
+                console.log('Close button found, adding event listener');
+                closeButton.addEventListener('click', function() {
+                    closeModal();
+                });
+            } else {
+                console.error('Close button not found');
+            }
+            
+            // Zavření modálního okna kliknutím mimo obsah
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('settingsModal');
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+        });
     </script>
 {/block}

@@ -1767,7 +1767,7 @@ h2:after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0rem;
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -2612,7 +2612,7 @@ p:contains("Zamítnuto")::before {
 }
 
 .form-control {
-  width: 100% !important;
+  width: 95% !important;
   padding: 10px 12px !important;
   border: 1px solid #cbd5e1 !important;
   border-radius: 6px !important;
@@ -2811,8 +2811,8 @@ label {
 
 #settingsModal .close-button {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 5px;
+    right: 10px;
     font-size: 24px;
     font-weight: bold;
     cursor: pointer;
@@ -2847,7 +2847,7 @@ label {
 }
 
 #settingsModal input {
-    width: 100%;
+    width: 95%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -2871,6 +2871,52 @@ label {
 
 #settingsModal button[type="submit"]:hover {
     background-color: #1d4ed8;
+}
+
+/* Odstranění šedého pozadí při hoveru nad dny v kalendáři */
+.fc-daygrid-day:hover,
+.fc-daygrid-day.fc-day-sat:hover,
+.fc-daygrid-day.fc-day-sun:hover,
+.fc .fc-daygrid-day:hover,
+.fc tbody tr:hover,
+.fc tbody tr:hover td,
+.fc .fc-scrollgrid-section tr:hover,
+.fc-scrollgrid-section-body tr:hover,
+.fc-scrollgrid-section-body tr:hover td,
+.fc-scrollgrid-section tr:hover td,
+.fc .fc-scrollgrid tr:hover {
+    background-color: transparent !important;
+}
+
+/* Pro víkendy (sobota a neděle) */
+.fc .fc-day-sat, 
+.fc .fc-day-sun {
+    background-color: #f9f9f9;
+}
+
+/* Pro hover nad událostmi, aby přesto fungovaly hover efekty na událostech */
+.fc-event:hover {
+    opacity: 0.8;
+}
+
+/* Pro zachování hover efektu pouze na událostech, ne na pozadí dní */
+.fc-h-event:hover .fc-event-main,
+.fc-v-event:hover .fc-event-main {
+    opacity: 0.9;
+}
+
+/* Zajištění, že aktuální den (today) zůstane zvýrazněný i při hoveru */
+.fc .fc-daygrid-day.fc-day-today,
+.fc .fc-daygrid-day.fc-day-today:hover,
+.fc-daygrid-day.fc-day-today:hover,
+.fc tbody tr:hover .fc-day-today,
+.fc tbody tr:hover td.fc-day-today {
+    background-color: #e8f4f8 !important; /* Světle modrá barva pro aktuální den */
+}
+
+/* Explicitní priorita pro zvýraznění aktuálního dne */
+.fc-theme-standard .fc-daygrid-day.fc-day-today {
+    background-color: #e8f4f8 !important;
 }
 
 /* Odstranění šedého pozadí při hoveru nad dny v kalendáři */

@@ -20,7 +20,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr n:foreach="$requests as $request">
+            <tr n:foreach="$requests as $request" class="status-{$request->status}-row">
                 <td>{$request->user->first_name} {$request->user->last_name}</td>
                 <td>{$request->start_date|date:'j. F Y'}</td>
                 <td>{$request->end_date|date:'j. F Y'}</td>

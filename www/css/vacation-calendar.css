@@ -1,0 +1,543 @@
+/* Vlastní kalendář dovolených - CSS */
+
+/* === KALENDÁŘ KONTEJNER === */
+.vacation-calendar {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    margin: 20px 0;
+}
+
+/* === HLAVIČKA KALENDÁŘE === */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.calendar-nav-btn {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.calendar-nav-btn:hover {
+    background: #3730a3;
+    transform: translateY(-1px);
+}
+
+.calendar-nav-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.calendar-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 10px;
+}
+
+.calendar-view-switcher {
+    display: flex;
+    gap: 5px;
+}
+
+.view-btn {
+    padding: 6px 12px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    color: #4b5563;
+}
+
+.view-btn.active {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+}
+
+.view-btn:hover:not(.active) {
+    background: #f3f4f6;
+}
+
+/* === DNY V TÝDNU HEADER === */
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.calendar-weekday {
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: 600;
+    color: #4b5563;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+    border-right: 1px solid #e2e8f0;
+}
+
+.calendar-weekday:last-child {
+    border-right: none;
+}
+
+.calendar-weekday.weekend {
+    color: #dc2626;
+}
+
+/* === KALENDÁŘNÍ MŘÍŽKA === */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #ffffff;
+}
+
+.calendar-day {
+    min-height: 140px; /* Zvětšeno pro více událostí */
+    padding: 4px 0px;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+.calendar-day:hover {
+    background: #f8fafc;
+}
+
+.calendar-day:last-child {
+    border-right: none;
+}
+
+/* === ČÍSLO DNE === */
+.day-number {
+    font-weight: 600;
+    font-size: 12px;
+    color: #374151;
+    margin-bottom: 4px;
+    flex-shrink: 0;
+    margin-left: 5px;
+}
+
+/* === STAVY DNÍ === */
+.calendar-day.other-month {
+    background: #fafbfc;
+    color: #9ca3af;
+}
+
+.calendar-day.other-month .day-number {
+    color: #9ca3af;
+}
+
+.calendar-day.today {
+    background: #dbeafe;
+}
+
+.calendar-day.today .day-number {
+    color: #1d4ed8;
+    font-weight: 700;
+}
+
+.calendar-day.weekend {
+    background: #fefefe;
+}
+
+.calendar-day.holiday {
+    background: #fef2f2;
+}
+
+.calendar-day.holiday .day-number {
+    color: #dc2626;
+}
+
+/* === UDÁLOSTI DOVOLENÝCH === */
+.vacation-events {
+    flex: 1;
+    display: block;
+    position: relative;
+    min-height: 120px; /* Zvětšeno pro více událostí */
+    overflow: visible;
+    padding: 0px 0px 0px 2px;
+}
+
+.vacation-event {
+    position: absolute;
+    left: 0;
+    right: 2px;
+    height: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    overflow: visible;
+    z-index: 1;
+}
+
+/* Pozicování podle track čísla - rozšířeno na 10 tracks */
+.vacation-event[data-track="0"] { top: 2px; }
+.vacation-event[data-track="1"] { top: 25px; }
+.vacation-event[data-track="2"] { top: 45px; }
+.vacation-event[data-track="3"] { top: 65px; }
+.vacation-event[data-track="4"] { top: 85px; }
+.vacation-event[data-track="5"] { top: 105px; }
+.vacation-event[data-track="6"] { top: 125px; }
+.vacation-event[data-track="7"] { top: 145px; }
+.vacation-event[data-track="8"] { top: 165px; }
+.vacation-event[data-track="9"] { top: 185px; }
+
+/* Fallback pro další tracks - dynamické pozicování */
+.vacation-event:not([data-track="0"]):not([data-track="1"]):not([data-track="2"]):not([data-track="3"]):not([data-track="4"]):not([data-track="5"]):not([data-track="6"]):not([data-track="7"]):not([data-track="8"]):not([data-track="9"]) {
+    position: relative;
+    margin-top: 2px;
+}
+
+/* Hover efekt pro jednotlivé části */
+.vacation-event:hover {
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* Hover efekt pro celou událost - jemné ztmavení */
+.vacation-event.event-highlighted {
+    z-index: 12 !important;
+    filter: brightness(0.85) !important;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25) !important;
+}
+
+/* === BARVY PODLE STAVU === */
+.vacation-event.approved {
+    background: #10b981;
+}
+
+.vacation-event.pending {
+    background: #f59e0b;
+}
+
+.vacation-event.rejected {
+    background: #ef4444;
+}
+
+.vacation-event.sick_leave {
+    background: #8b5cf6;
+}
+
+.vacation-event.other {
+    background: #6b7280;
+}
+
+/* === STYLY PRO KONTINUÁLNÍ UDÁLOSTI === */
+.vacation-event.start {
+    border-radius: 3px 0 0 3px;
+    padding-left: 5px;
+    padding-right: 0;
+    margin-right: -1px;
+    margin-left: 6px;
+}
+
+.vacation-event.end {
+    border-radius: 0 3px 3px 0;
+    padding-left: 0;
+    padding-right: 5px;
+    margin-left: 1px;
+    justify-content: flex-end;
+    margin-right: 4px;
+}
+
+.vacation-event.middle {
+    border-radius: 0;
+    padding: 0;
+    margin-left: 1px;
+    margin-right: -1px;
+}
+
+.vacation-event.single {
+    border-radius: 3px;
+    padding: 0 5px;
+    margin: 0px 4px 0px 6px;
+}
+
+/* === KONTINUITA MEZI DNY === */
+.vacation-event.start::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: inherit;
+    z-index: -1;
+}
+
+.vacation-event.end::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: inherit;
+    z-index: -1;
+}
+
+.vacation-event.middle::before,
+.vacation-event.middle::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: inherit;
+    z-index: -1;
+}
+
+.vacation-event.middle::before {
+    left: -1px;
+}
+
+.vacation-event.middle::after {
+    right: -1px;
+}
+
+/* === TEXT UDÁLOSTI === */
+.event-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+/* === PŮLDENNÍ DOVOLENÉ === */
+.vacation-event.half-day {
+    background: linear-gradient(90deg, #e0f2fe 0%, #e0f2fe 50%, transparent 50%);
+    color: #0c4a6e;
+    border: 1px solid #06b6d4;
+}
+
+/* === INDIKÁTOR VÍCE UDÁLOSTÍ === */
+.more-events {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 9px;
+    color: #6b7280;
+    background: rgba(255,255,255,0.9);
+    padding: 1px 4px;
+    border-radius: 2px;
+    cursor: pointer;
+    z-index: 20;
+    font-weight: 600;
+}
+
+.more-events:hover {
+    background: rgba(255,255,255,1);
+    color: #374151;
+}
+
+/* === LOADING STAV === */
+.calendar-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.calendar-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e5e7eb;
+    border-top: 2px solid #4f46e5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* === LEGENDA === */
+.calendar-legend {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin: 15px 0;
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #4b5563;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+/* === RESPONZIVNÍ DESIGN === */
+@media (max-width: 768px) {
+    .calendar-header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px 15px;
+    }
+
+    .calendar-nav {
+        order: 2;
+    }
+
+    .calendar-view-switcher {
+        order: 1;
+    }
+
+    .calendar-day {
+        min-height: 80px;
+        padding: 2px 4px;
+    }
+
+    .day-number {
+        font-size: 12px;
+    }
+
+    .vacation-event {
+        height: 14px;
+        font-size: 9px;
+    }
+
+    .calendar-legend {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .calendar-weekday {
+        padding: 8px 4px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-day {
+        min-height: 60px;
+        padding: 2px;
+    }
+
+    .vacation-event {
+        height: 12px;
+        font-size: 8px;
+    }
+
+    .calendar-nav-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .calendar-title {
+        font-size: 16px;
+    }
+}
+
+/* === DARK MODE PODPORA === */
+@media (prefers-color-scheme: dark) {
+    .vacation-calendar {
+        background: #1f2937;
+        color: #f3f4f6;
+    }
+
+    .calendar-header {
+        background: #374151;
+        border-bottom-color: #4b5563;
+    }
+
+    .calendar-weekdays {
+        background: #374151;
+        border-bottom-color: #4b5563;
+    }
+
+    .calendar-weekday {
+        color: #d1d5db;
+        border-right-color: #4b5563;
+    }
+
+    .calendar-day {
+        border-color: #4b5563;
+        background: #1f2937;
+    }
+
+    .calendar-day:hover {
+        background: #374151;
+    }
+
+    .calendar-day.other-month {
+        background: #111827;
+        color: #6b7280;
+    }
+}
+
+/* === PRINT STYLY === */
+@media print {
+    .vacation-calendar {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+
+    .calendar-header {
+        background: white !important;
+        border-bottom: 1px solid #000;
+    }
+
+    .calendar-nav-btn,
+    .calendar-view-switcher {
+        display: none;
+    }
+
+    .vacation-event {
+        background: #ccc !important;
+        color: #000 !important;
+        border: 1px solid #000;
+    }
+}

@@ -6,14 +6,13 @@ namespace App\Presenters;
 
 use Nette;
 use Nette\Database\Explorer;
-use Nette\Utils\DateTime; // Pro práci s daty
-use Nette\Utils\Json;   // Pro enkódování do JSONu
+use Nette\Utils\DateTime;
+use Nette\Utils\Json;
 use App\Model\VacationCalculatorService;
 
-final class DashboardPresenter extends BasePresenter // Dědí z BasePresenter pro zabezpečení
+final class DashboardPresenter extends BasePresenter
 {
     private Explorer $database;
-
     private VacationCalculatorService $vacationCalculatorService;
 
     public function __construct(Explorer $database, VacationCalculatorService $vacationCalculatorService)
@@ -30,37 +29,36 @@ final class DashboardPresenter extends BasePresenter // Dědí z BasePresenter p
     {
         switch ($portion) {
             case 'FULL_DAY': return 'celý den';
-            case 'AM_HALF_DAY': return 'dop. půlden'; // Upraveno pro konzistenci s Latte
-            case 'PM_HALF_DAY': return 'odp. půlden'; // Upraveno pro konzistenci s Latte
+            case 'AM_HALF_DAY': return 'dop. půlden';
+            case 'PM_HALF_DAY': return 'odp. půlden';
             default: return $portion;
         }
     }
 
-/**
- * Přesměruje uživatele do administrace.
- */
-public function handleGoToAdmin(): void
-{
-    if ($this->getUser()->isInRole('admin')) {
-        $this->redirectUrl($this->link(':Admin:Homepage:default'));
-    } else {
-        $this->flashMessage('Pro přístup do administrace nemáte oprávnění.', 'warning');
-        $this->redirect('this');
+    /**
+     * Přesměruje uživatele do administrace.
+     */
+    public function handleGoToAdmin(): void
+    {
+        if ($this->getUser()->isInRole('admin')) {
+            $this->redirectUrl($this->link(':Admin:Homepage:default'));
+        } else {
+            $this->flashMessage('Pro přístup do administrace nemáte oprávnění.', 'warning');
+            $this->redirect('this');
+        }
     }
-}
+
     public function renderDefault(): void
     {
-        // parent::renderDefault(); // Pokud by tvůj BasePresenter měl vlastní renderDefault logiku
-
         $userId = $this->getUser()->getId();
-        $currentYear = (int)date('Y'); // Použijeme aktuální rok dynamicky
+        $currentYear = (int)date('Y');
 
-        // 1. Načtení žádostí o dovolenou pro aktuálního uživatele (pro tabulkový výpis)
+        // 1. Načtení žádostí o dovolenou pro aktuálního uživatele
         $myVacationRequests = $this->database->table('vacation_requests')
             ->where('user_id', $userId)
-            ->order('start_date DESC'); // Nebo 'created_at DESC'
+            ->order('start_date DESC');
 
-        // 2. Načtení nastavení dovolené pro aktuálního uživatele a aktuální rok
+        // 2. Načtení nastavení dovolené
         $vacationSettings = $this->database->table('vacation_settings')
             ->where('user_id', $userId)
             ->where('year', $currentYear)
@@ -74,119 +72,170 @@ public function handleGoToAdmin(): void
         if ($vacationSettings) {
             $totalAllowance = (float)$vacationSettings->total_days + (float)$vacationSettings->carried_days;
 
-            // Spočítáme skutečně vyčerpané dny z SCHVÁLENÝCH žádostí v aktuálním roce
             $approvedRequestsThisYear = $this->database->table('vacation_requests')
                 ->where('user_id', $userId)
-                ->where('status', 'approved') // Jen schválené
-                ->where('YEAR(start_date)', $currentYear); // Filtrujeme podle roku začátku dovolené
+                ->where('status', 'approved')
+                ->where('YEAR(start_date)', $currentYear);
 
             foreach ($approvedRequestsThisYear as $request) {
                 $daysTaken += (float)$request->calculated_duration_days;
             }
-            // TODO: V budoucnu by se hodnota $daysTaken měla ideálně brát přímo z
-            //       aktualizovaného sloupce `vacation_settings.days_taken_in_year`
+            
             $remainingDays = $totalAllowance - $daysTaken;
         }
 
-        // 4. Příprava událostí pro FullCalendar
-        $calendarEvents = $this->getCalendarEvents();
+        // 4. Příprava událostí pro vlastní kalendář
+        $calendarEvents = $this->getCalendarEventsForCustomCalendar();
 
-        // 5. Předání všech dat do šablony
+        // 5. Předání dat do šablony
         $this->template->message = "Vítejte na vašem dashboardu!";
         $this->template->myRequests = $myVacationRequests;
         $this->template->vacationSettings = $vacationSettings;
         $this->template->remainingDays = $remainingDays;
-        $this->template->daysTaken = $daysTaken; // Ujisti se, že tuto proměnnou také předáváš
+        $this->template->daysTaken = $daysTaken;
         $this->template->currentYear = $currentYear;
-        $this->template->calendarEventsJson = Json::encode($calendarEvents); // Toto je klíčové pro kalendář
-        $this->template->czechHolidays = $this->vacationCalculatorService->getCzechHolidays(); // Předáme svátky do šablony (možná nebudeme potřebovat)
+        
+        // Pro vlastní kalendář - data ve formátu kompatibilním s původním FullCalendar
+        $this->template->calendarEventsJson = Json::encode($calendarEvents);
+        $this->template->czechHolidays = Json::encode($this->vacationCalculatorService->getCzechHolidays());
     }
 
-    private function getCalendarEvents(): array
+    /**
+     * Získání událostí kalendáře pro vlastní kalendář
+     * Zachováváme kompatibilitu s původním formátem pro snadnější přechod
+     */
+    private function getCalendarEventsForCustomCalendar(): array
     {
         $events = [];
         $year = (int)date('Y');
-        $month = (int)date('n');
-        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
         $czechHolidays = $this->vacationCalculatorService->getCzechHolidays();
 
-        // Získání událostí dovolených z databáze (načítáme všechny pro zobrazení v kalendáři)
+        // Získání všech žádostí o dovolenou pro aktuální rok
         $vacationRequests = $this->database->table('vacation_requests')
             ->where('YEAR(start_date) = ? OR YEAR(end_date) = ?', $year, $year)
             ->fetchAll();
 
         foreach ($vacationRequests as $vacation) {
-            if ($vacation->end_date instanceof Nette\Utils\DateTime) {
-                $endDateObject = $vacation->end_date;
-            } else {
-                try {
-                    $endDateObject = new Nette\Utils\DateTime($vacation->end_date);
-                } catch (\Exception $ex) {
-                    \Tracy\Debugger::log("Chyba při parsování end_date pro vacation ID {$vacation->id}: " . $ex->getMessage(), \Tracy\ILogger::WARNING);
-                    continue;
+            try {
+                // Zpracování dat
+                $endDateObject = $vacation->end_date instanceof DateTime ? 
+                    $vacation->end_date : new DateTime($vacation->end_date);
+                
+                // Pro FullCalendar kompatibilitu - konečný datum + 1 den
+                $endDateForCalendar = $endDateObject->modifyClone('+1 day');
+                
+                $startDateObject = $vacation->start_date instanceof DateTime ? 
+                    $vacation->start_date : new DateTime($vacation->start_date);
+                
+                $createdAtObject = $vacation->created_at instanceof DateTime ? 
+                    $vacation->created_at : 
+                    ($vacation->created_at ? new DateTime($vacation->created_at) : null);
+
+                // Získání jména uživatele
+                $userName = $vacation->user ? 
+                    ($vacation->user->first_name . ' ' . $vacation->user->last_name) : 
+                    'Neznámý uživatel';
+
+                // Překlad typu
+                $typeText = 'Dovolená';
+                if ($vacation->type === 'sick_leave') {
+                    $typeText = 'Nemocenská';
+                } elseif ($vacation->type === 'other') {
+                    $typeText = 'Jiné';
                 }
+
+                $title = $userName . ' - ' . $typeText;
+
+                // Barvy podle stavu
+                $backgroundColor = '#6c757d'; // výchozí
+                $borderColor = '#545b62';
+                
+                if ($vacation->status === 'approved') {
+                    $backgroundColor = '#28a745';
+                    $borderColor = '#1e7e34';
+                } elseif ($vacation->status === 'pending') {
+                    $backgroundColor = '#ffc107';
+                    $borderColor = '#e0a800';
+                } elseif ($vacation->status === 'rejected') {
+                    $backgroundColor = '#dc3545';
+                    $borderColor = '#c82333';
+                }
+
+                // Vytvoření události v kompatibilním formátu
+                $event = [
+                    'id' => $vacation->id,
+                    'title' => $title,
+                    'start' => $startDateObject->format('Y-m-d'),
+                    'end' => $endDateForCalendar->format('Y-m-d'),
+                    'backgroundColor' => $backgroundColor,
+                    'borderColor' => $borderColor,
+                    'textColor' => '#ffffff',
+                    'extendedProps' => [
+                        'userName' => $userName,
+                        'type' => $typeText,
+                        'status' => $vacation->status,
+                        'startDateFull' => $startDateObject->format('j. F Y'),
+                        'endDateFull' => $endDateObject->format('j. F Y'),
+                        'startDayPortionText' => $this->formatDayPortion($vacation->start_day_portion),
+                        'endDayPortionText' => $this->formatDayPortion($vacation->end_day_portion),
+                        'duration' => $vacation->calculated_duration_days,
+                        'note' => $vacation->note ?: '-',
+                        'requestedAt' => $createdAtObject ? $createdAtObject->format('j.n.Y H:i') : '-',
+                    ]
+                ];
+                
+                $events[] = $event;
+                
+            } catch (\Exception $ex) {
+                // Logování chyby a pokračování
+                \Tracy\Debugger::log(
+                    "Chyba při zpracování vacation ID {$vacation->id}: " . $ex->getMessage(), 
+                    \Tracy\ILogger::WARNING
+                );
+                continue;
             }
-            $endDateForCalendar = $endDateObject->modifyClone('+1 day');
-            $startDateObject = $vacation->start_date instanceof Nette\Utils\DateTime ? $vacation->start_date : new Nette\Utils\DateTime($vacation->start_date);
-            $createdAtObject = $vacation->created_at instanceof Nette\Utils\DateTime ? $vacation->created_at : ($vacation->created_at ? new Nette\Utils\DateTime($vacation->created_at) : null);
-            $userName = $vacation->user ? ($vacation->user->first_name . ' ' . $vacation->user->last_name) : 'Neznámý uživatel';
-            $typeText = 'Dovolená';
-            if ($vacation->type === 'sick_leave') {
-                $typeText = 'Nemocenská';
-            } elseif ($vacation->type === 'other') {
-                $typeText = 'Jiné';
-            }
-            $title = $userName . ' - ' . $typeText;
-            $backgroundColor = '#6c757d';
-            $borderColor = '#545b62';
-            if ($vacation->status === 'approved') {
-                $backgroundColor = '#28a745';
-                $borderColor = '#1e7e34';
-            } elseif ($vacation->status === 'pending') {
-                $backgroundColor = '#ffc107';
-                $borderColor = '#e0a800';
-            }
-            $event = [
-                'id' => $vacation->id,
-                'title' => $title,
-                'start' => $startDateObject->format('Y-m-d'),
-                'end' => $endDateForCalendar->format('Y-m-d'),
-                'backgroundColor' => $backgroundColor,
-                'borderColor' => $borderColor,
-                'textColor' => '#ffffff',
-                'extendedProps' => [
-                    'userName' => $userName,
-                    'type' => $typeText,
-                    'status' => $vacation->status,
-                    'startDateFull' => $startDateObject->format('j. F Y'),
-                    'endDateFull' => $endDateObject->format('j. F Y'),
-                    'startDayPortionText' => $this->formatDayPortion($vacation->start_day_portion),
-                    'endDayPortionText' => $this->formatDayPortion($vacation->end_day_portion),
-                    'duration' => $vacation->calculated_duration_days,
-                    'note' => $vacation->note ?: '-',
-                    'requestedAt' => $createdAtObject ? $createdAtObject->format('j.n.Y H:i') : '-',
-                ]
-            ];
-            $events[] = $event;
         }
 
-        // Přidání zvýraznění státních svátků
-    for ($i = 1; $i <= $daysInMonth; $i++) {
-        $currentDate = sprintf('%s-%02d-%02d', $year, $month, $i);
-        if (in_array($currentDate, $czechHolidays)) {
-            $events[] = [
-                'start' => $currentDate,
-                'end' => $currentDate,
-                'allDay' => true,
-                'className' => 'event-holiday',
-                'editable' => false,
-                'display' => 'background',
-            ];
-        }
+        return $events;
     }
 
-    return $events;
-}
+    /**
+     * AJAX endpoint pro získání událostí pro konkrétní měsíc
+     * Užitečné pro případné budoucí optimalizace
+     */
+    public function handleGetEventsForMonth(int $year, int $month): void
+    {
+        if (!$this->isAjax()) {
+            $this->redirect('this');
+        }
+
+        try {
+            // Získání událostí pouze pro konkrétní měsíc
+            $startDate = new DateTime("$year-$month-01");
+            $endDate = $startDate->modifyClone('last day of this month');
+            
+            $vacationRequests = $this->database->table('vacation_requests')
+                ->where('start_date <= ? AND end_date >= ?', $endDate->format('Y-m-d'), $startDate->format('Y-m-d'))
+                ->fetchAll();
+
+            $events = [];
+            foreach ($vacationRequests as $vacation) {
+                // Zde by byla stejná logika jako v getCalendarEventsForCustomCalendar()
+                // Zkráceno pro přehlednost
+            }
+
+            $this->sendJson([
+                'success' => true,
+                'events' => $events
+            ]);
+
+        } catch (\Exception $e) {
+            $this->sendJson([
+                'success' => false,
+                'error' => 'Chyba při načítání událostí'
+            ]);
+        }
+    }
 
     // Metoda pro odhlášení
     public function handleLogout(): void

@@ -1,19 +1,26 @@
 {* Soubor app/Presenters/templates/@layout.latte *}
 <!DOCTYPE html>
-<html>
+<html lang="cs">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{ifset $title}{$title} | {/ifset}CIG Dovolené</title>
+    
+    {* Hlavní CSS styly *}
     <link rel="stylesheet" href="{$basePath}/css/style.css">
-    {* Tvé další CSS linky atd. *}
+    
+    {* Vlastní kalendář CSS - načítá se jen když je potřeba *}
+    {ifset #content && $presenter->getName() === 'Dashboard'}
+        <link rel="stylesheet" href="{$basePath}/css/vacation-calendar.css">
+    {/ifset}
 </head>
 <body>
     <header>
-        {* Sem může přijít menu nebo logo *}
+        {* Menu nebo logo *}
     </header>
 
     <main class="container">
-        {* Místo {control flashes} použijeme toto: *}
+        {* Flash zprávy *}
         <div n:foreach="$flashes as $flash" n:class="'alert alert-' . $flash->type">
             {$flash->message}
         </div>
@@ -26,7 +33,7 @@
     </footer>
 
     {block scripts}
-        {* Tvé JS skripty *}
+        {* Zde se načtou specifické skripty pro jednotlivé stránky *}
     {/block}
 </body>
 </html>

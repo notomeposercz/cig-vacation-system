@@ -129,6 +129,57 @@ tr:hover {
     border-color: #f5c6cb;
 }
 
+/* === PŘIDEJTE TYTO NOVÉ STYLY PRO VLASTNÍ KALENDÁŘ === */
+
+/* Dashboard karty pro vlastní kalendář */
+.dashboard-card.calendar-card {
+    margin-bottom: 30px;
+}
+
+.dashboard-card.calendar-card .card-body {
+    padding: 0;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #edf2f7;
+    background-color: #fafbfc;
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Integrace vlastního kalendáře s existujícím designem */
+#vacationCalendar {
+    /* Vlastní kalendář se bude stylovat přes vacation-calendar.css */
+}
+
+/* Responsive úpravy */
+@media (max-width: 768px) {
+    .dashboard-card.calendar-card .card-body {
+        padding: 0;
+    }
+    
+    .card-header {
+        padding: 12px 15px;
+    }
+    
+    .card-header h2 {
+        font-size: 16px;
+    }
+}
+
 /* Styly pro dashboard specifické */
 .button { /* Jednoduchý styl pro tlačítko/odkaz */
     display: inline-block;
@@ -220,72 +271,6 @@ tr:hover {
     color: red;
 }
 
-/* Styly pro FullCalendar */
-#calendar {
-    max-width: 1100px;
-    margin: 20px auto;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #fdfdfd !important;
-}
-
-#calendar:hover td {
-  background-color: transparent !important; /* Zabrání ztmavování řádků na přeskáčku při najetí na celý kalendář */
-}
-
-#calendar .fc-day-row:hover {
-  background-color: transparent !important; /* Odstraní ztmavování řádku při najetí */
-}
-
-#calendar .fc-day-row:hover td {
-  background-color: transparent !important; /* Odstraní ztmavování řádku při najetí */
-}
-
-#calendar:hover .fc-day-row td {
-  background-color: transparent !important; /* Zabrání ztmavování řádků na přeskáčku při najetí na celý kalendář */
-}
-
-.fc-event {
-    cursor: pointer;
-    border-radius: 3px;
-    padding: 2px 4px;
-    font-size: 0.85em;
-}
-
-.fc-event.event-holiday {
-    background-color: #f0f0f0 !important; /* Světle šedá barva pozadí */
-    color: #333 !important;
-    border: none !important;
-    cursor: default !important;
-    pointer-events: none !important; /* Aby neovlivňoval interakci */
-}
-
-#calendar .fc-event:hover {
-    opacity: 0.8; /* Změní se jen průhlednost, ne barva pozadí */
-}
-
-.fc-daygrid-day.fc-day-today {
-    background-color: #e6f7ff; /* Zvýraznění dneška */
-}
-
-.fc-daygrid-event-harness:hover {
-  background-color: transparent !important; /* Průhledné pozadí při najetí */
-  opacity: 1 !important; /* Plná průhlednost textu a obsahu */
-}
-
-.fc-daygrid-day:hover {
-  background-color: #f0f0f0 !important; /* Nebo jiná světlá barva pro indikaci najetí na den */
-}
-
-.fc-day-sat, .fc-day-sun {
-  background-color: #f9f9f9 !important; /* Světlejší pozadí pro víkendy, pokud chceš */
-}
-
-.fc-row:hover td {
-  background-color: transparent !important; /* Odstraní ztmavování řádku při najetí */
-}
-
 /* Styly pro modální okno */
 .modal {
     display: none; /* Skryté by default */
@@ -352,13 +337,6 @@ tr:hover {
     color: black;
     text-decoration: none;
     cursor: pointer;
-}
-
-.fc-scrollgrid-section-body tr:hover > td,
-.fc-day-table tr:hover > td,
-.fc-daygrid-body tr:hover > td {
-  filter: none !important;
-  -webkit-filter: none !important;
 }
 
 .form-container {
@@ -587,10 +565,6 @@ tr:hover {
     color: #6c757d;
 }
 
-.calendar-section, .requests-section {
-    margin-bottom: 40px;
-}
-
 .vacation-requests-table {
     width: 100%;
     border-collapse: collapse;
@@ -737,60 +711,6 @@ tr:hover {
 
 .nav-back-to-app:hover {
     background-color: #0f151a;
-}
-
-/* Styly pro kalendář */
-#calendar.dashboard-calendar {
-    max-width: 100%;
-    margin: 20px 0;
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.calendar-section {
-    margin-bottom: 30px;
-}
-
-/* FullCalendar specifické styly */
-.fc .fc-toolbar {
-    margin-bottom: 1.5em !important;
-}
-
-.fc .fc-button-primary {
-    background-color: #3498db !important;
-    border-color: #3498db !important;
-}
-
-.fc .fc-button-primary:hover {
-    background-color: #2980b9 !important;
-    border-color: #2980b9 !important;
-}
-
-.fc .fc-button-active {
-    background-color: #2c3e50 !important;
-    border-color: #2c3e50 !important;
-}
-
-.fc .fc-daygrid-day.fc-day-today {
-    background-color: #e8f4f8 !important;
-}
-
-.fc-event-main {
-    padding: 2px 4px !important;
-}
-
-/* Opravit problém se zmizením kalendáře - zajistit, že kontejner má minimální výšku */
-.calendar-section #calendar {
-    min-height: 600px;
-    height: auto;
-}
-
-/* Ujistit se, že všechny prvky kalendáře jsou viditelné */
-.fc-view-harness, .fc-scrollgrid, .fc-scrollgrid-liquid {
-    height: auto !important;
-    min-height: 500px !important;
 }
 
 /* Moderní dashboard styly */
@@ -1030,57 +950,6 @@ tr:hover {
     display: inline-block;
 }
 
-/* FullCalendar styly */
-#calendar.dashboard-calendar {
-    min-height: 500px;
-}
-
-.fc .fc-toolbar {
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.fc .fc-toolbar-title {
-    font-size: 18px !important;
-}
-
-.fc .fc-button {
-    padding: 8px 12px !important;
-    font-size: 14px !important;
-    height: auto !important;
-    box-shadow: none !important;
-}
-
-.fc .fc-button-primary {
-    background-color: var(--primary-color) !important;
-    border-color: var(--primary-color) !important;
-}
-
-.fc .fc-button-primary:hover {
-    background-color: var(--primary-dark) !important;
-    border-color: var(--primary-dark) !important;
-}
-
-.fc .fc-button-active {
-    background-color: var(--primary-dark) !important;
-    border-color: var(--primary-dark) !important;
-}
-
-.fc .fc-daygrid-day.fc-day-today {
-    background-color: rgba(52, 152, 219, 0.1) !important;
-}
-
-.fc-event {
-    cursor: pointer !important;
-    padding: 3px 5px !important;
-    border-radius: 3px !important;
-    font-size: 12px !important;
-}
-
-.fc-event:hover {
-    filter: brightness(90%);
-}
-
 /* Tabulka dat */
 .table-responsive {
     overflow-x: auto;
@@ -1116,15 +985,6 @@ tr:hover {
 
 .data-table tbody tr:last-child td {
     border-bottom: none;
-}
-
-/* Státní svátky v kalendáři */
-.fc-day-today.fc-event-holiday {
-    background-color: #e8f4f8 !important;
-}
-
-.fc-day.fc-event-holiday {
-    background-color: #f8f9fa !important;
 }
 
 /* Formátování dat v tabulce */
@@ -1383,15 +1243,6 @@ tr:hover {
         padding: 15px;
     }
     
-    .fc .fc-toolbar {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .fc .fc-toolbar-chunk {
-        margin-bottom: 10px;
-    }
-    
     .modal-content {
         width: 95%;
         margin: 5% auto;
@@ -1552,30 +1403,6 @@ h1, h2 {
 .stat-details {
     font-size: 0.85em;
     color: var(--gray-color);
-}
-
-/* Vylepšení kalendáře */
-#calendar {
-    background-color: white;
-    border: none;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    padding: 20px;
-    margin-top: 0;
-}
-
-.calendar-section, .requests-section {
-    margin-bottom: 30px;
-    background-color: white;
-    border-radius: var(--border-radius);
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.calendar-section h2, .requests-section h2 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
 }
 
 /* Vylepšení tabulky */
@@ -1912,54 +1739,6 @@ p:contains('Zamítnuto'):before {
   background-color: var(--danger);
 }
 
-/* Kalendář kontejner */
-#calendar, .calendar-section {
-  background-color: white;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  margin-top: 1rem;
-  margin-bottom: 2rem;
-  border: 1px solid var(--gray-200);
-}
-
-/* FullCalendar specifické */
-.fc .fc-toolbar {
-  padding: 1rem;
-  background-color: var(--gray-50);
-  border-bottom: 1px solid var(--gray-200);
-}
-
-.fc .fc-toolbar-title {
-  font-size: 1.25rem !important;
-  font-weight: 600;
-}
-
-.fc .fc-button-primary {
-  background-color: var(--primary) !important;
-  border-color: var(--primary) !important;
-  font-weight: 500;
-  font-size: 0.875rem !important;
-  padding: 0.375rem 0.75rem !important;
-  box-shadow: var(--shadow-sm) !important;
-}
-
-.fc .fc-button-primary:hover {
-  background-color: var(--primary-dark) !important;
-  border-color: var(--primary-dark) !important;
-}
-
-.fc .fc-daygrid-day.fc-day-today {
-  background-color: var(--primary-light) !important;
-}
-
-.fc-event {
-  border: none !important;
-  font-size: 0.75rem !important;
-  padding: 2px 4px !important;
-  border-radius: 3px !important;
-}
-
 /* Tabulka žádostí */
 .vacation-requests-table {
   width: 100%;
@@ -2291,34 +2070,6 @@ h2:contains("Statistika") ~ p:not(h2 ~ h2 ~ p) {
   border-radius: 8px !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
   border: 1px solid #e2e8f0 !important;
-}
-
-/* Kalendář */
-#calendar {
-  background-color: white !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
-  border: 1px solid #e2e8f0 !important;
-  padding: 15px !important;
-}
-
-.fc-toolbar-chunk {
-  display: flex !important;
-  align-items: center !important;
-}
-
-.fc-button-primary {
-  background-color: #2563eb !important;
-  border-color: #2563eb !important;
-}
-
-.fc-button-primary:hover {
-  background-color: #1d4ed8 !important;
-  border-color: #1d4ed8 !important;
-}
-
-.fc-daygrid-day.fc-day-today {
-  background-color: #dbeafe !important;
 }
 
 /* Legenda stylizovaná */
@@ -2871,96 +2622,4 @@ label {
 
 #settingsModal button[type="submit"]:hover {
     background-color: #1d4ed8;
-}
-
-/* Odstranění šedého pozadí při hoveru nad dny v kalendáři */
-.fc-daygrid-day:hover,
-.fc-daygrid-day.fc-day-sat:hover,
-.fc-daygrid-day.fc-day-sun:hover,
-.fc .fc-daygrid-day:hover,
-.fc tbody tr:hover,
-.fc tbody tr:hover td,
-.fc .fc-scrollgrid-section tr:hover,
-.fc-scrollgrid-section-body tr:hover,
-.fc-scrollgrid-section-body tr:hover td,
-.fc-scrollgrid-section tr:hover td,
-.fc .fc-scrollgrid tr:hover {
-    background-color: transparent !important;
-}
-
-/* Pro víkendy (sobota a neděle) */
-.fc .fc-day-sat, 
-.fc .fc-day-sun {
-    background-color: #f9f9f9;
-}
-
-/* Pro hover nad událostmi, aby přesto fungovaly hover efekty na událostech */
-.fc-event:hover {
-    opacity: 0.8;
-}
-
-/* Pro zachování hover efektu pouze na událostech, ne na pozadí dní */
-.fc-h-event:hover .fc-event-main,
-.fc-v-event:hover .fc-event-main {
-    opacity: 0.9;
-}
-
-/* Zajištění, že aktuální den (today) zůstane zvýrazněný i při hoveru */
-.fc .fc-daygrid-day.fc-day-today,
-.fc .fc-daygrid-day.fc-day-today:hover,
-.fc-daygrid-day.fc-day-today:hover,
-.fc tbody tr:hover .fc-day-today,
-.fc tbody tr:hover td.fc-day-today {
-    background-color: #e8f4f8 !important; /* Světle modrá barva pro aktuální den */
-}
-
-/* Explicitní priorita pro zvýraznění aktuálního dne */
-.fc-theme-standard .fc-daygrid-day.fc-day-today {
-    background-color: #e8f4f8 !important;
-}
-
-/* Odstranění šedého pozadí při hoveru nad dny v kalendáři */
-.fc-daygrid-day:hover,
-.fc-daygrid-day.fc-day-sat:hover,
-.fc-daygrid-day.fc-day-sun:hover,
-.fc .fc-daygrid-day:hover,
-.fc tbody tr:hover,
-.fc tbody tr:hover td,
-.fc .fc-scrollgrid-section tr:hover,
-.fc-scrollgrid-section-body tr:hover,
-.fc-scrollgrid-section-body tr:hover td,
-.fc-scrollgrid-section tr:hover td,
-.fc .fc-scrollgrid tr:hover {
-    background-color: transparent !important;
-}
-
-/* Pro víkendy (sobota a neděle) */
-.fc .fc-day-sat, 
-.fc .fc-day-sun {
-    background-color: #f9f9f9;
-}
-
-/* Pro hover nad událostmi, aby přesto fungovaly hover efekty na událostech */
-.fc-event:hover {
-    opacity: 0.8;
-}
-
-/* Pro zachování hover efektu pouze na událostech, ne na pozadí dní */
-.fc-h-event:hover .fc-event-main,
-.fc-v-event:hover .fc-event-main {
-    opacity: 0.9;
-}
-
-/* Zajištění, že aktuální den (today) zůstane zvýrazněný i při hoveru */
-.fc .fc-daygrid-day.fc-day-today,
-.fc .fc-daygrid-day.fc-day-today:hover,
-.fc-daygrid-day.fc-day-today:hover,
-.fc tbody tr:hover .fc-day-today,
-.fc tbody tr:hover td.fc-day-today {
-    background-color: #e8f4f8 !important; /* Světle modrá barva pro aktuální den */
-}
-
-/* Explicitní priorita pro zvýraznění aktuálního dne */
-.fc-theme-standard .fc-daygrid-day.fc-day-today {
-    background-color: #e8f4f8 !important;
 }

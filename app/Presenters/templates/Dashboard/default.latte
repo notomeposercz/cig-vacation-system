@@ -6,70 +6,63 @@
 <div class="dashboard-container">
     <!-- Horní lišta s akcemi -->
     <div class="dashboard-header">
-    <div class="dashboard-title">
-        <h1>Můj přehled dovolené</h1>
-        {if $user->isLoggedIn()}
-            <p class="dashboard-login-info">
-                Přihlášen: <strong>{$user->getIdentity()->first_name} {$user->getIdentity()->last_name}</strong>
-                <span class="user-role">{$user->getIdentity()->role|firstUpper}</span>
-                <a n:href="logout!" class="dashboard-logout-link">Odhlásit se</a>
-            </p>
-        {/if}
-    </div>
-    <div class="dashboard-actions">
-        <a n:href="Vacation:newRequest" class="button primary-button">
-            <i class="icon-plus"></i> Podat novou žádost o dovolenou
-        </a>
-        {if $user->isInRole('admin')}
-            <a n:href="goToAdmin!" class="button secondary-button">
-                <i class="icon-cog"></i> Administrace
+        <div class="dashboard-title">
+            <h1>Můj přehled dovolené</h1>
+            {if $user->isLoggedIn()}
+                <p class="dashboard-login-info">
+                    Přihlášen: <strong>{$user->getIdentity()->first_name} {$user->getIdentity()->last_name}</strong>
+                    <span class="user-role">{$user->getIdentity()->role|firstUpper}</span>
+                    <a n:href="logout!" class="dashboard-logout-link">Odhlásit se</a>
+                </p>
+            {/if}
+        </div>
+        <div class="dashboard-actions">
+            <a n:href="Vacation:newRequest" class="button primary-button">
+                <i class="icon-plus"></i> Podat novou žádost o dovolenou
             </a>
-        {/if}
+            {if $user->isInRole('admin')}
+                <a n:href="goToAdmin!" class="button secondary-button">
+                    <i class="icon-cog"></i> Administrace
+                </a>
+            {/if}
+        </div>
     </div>
-</div>
 
-<div class="dashboard-statistics">
-    <h2>Statistika dovolené pro rok {$currentYear}</h2>
-    <div class="statistics-container">
-        {if $vacationSettings}
-            <div class="stat-box">
-                <div class="stat-title">Nárok na dovolenou</div>
-                <div class="stat-value">{$vacationSettings->total_days + $vacationSettings->carried_days|number:1,',',' '} dní</div>
-                <div class="stat-details">
-                    <div>Z minulého roku: {$vacationSettings->carried_days|number:1,',',' '} dní</div>
-                    <div>Standardní nárok: {$vacationSettings->total_days|number:1,',',' '} dní</div>
+    <div class="dashboard-statistics">
+        <h2>Statistika dovolené pro rok {$currentYear}</h2>
+        <div class="statistics-container">
+            {if $vacationSettings}
+                <div class="stat-box">
+                    <div class="stat-title">Nárok na dovolenou</div>
+                    <div class="stat-value">{$vacationSettings->total_days + $vacationSettings->carried_days|number:1,',',' '} dní</div>
+                    <div class="stat-details">
+                        <div>Z minulého roku: {$vacationSettings->carried_days|number:1,',',' '} dní</div>
+                        <div>Standardní nárok: {$vacationSettings->total_days|number:1,',',' '} dní</div>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-title">Vyčerpáno (schváleno)</div>
-                <div class="stat-value">{$daysTaken|number:1,',',' '} dní</div>
-            </div>
-            <div class="stat-box remaining">
-                <div class="stat-title">Zbývá</div>
-                <div class="stat-value" style="color: {if $remainingDays < 0}#e74c3c{elseif $remainingDays < 5}#f39c12{else}#27ae60{/if};">
-                    {$remainingDays|number:1,',',' '} dní
+                <div class="stat-box">
+                    <div class="stat-title">Vyčerpáno (schváleno)</div>
+                    <div class="stat-value">{$daysTaken|number:1,',',' '} dní</div>
                 </div>
-            </div>
-        {else}
-            <p class="alert alert-warning full-width">Pro rok {$currentYear} nemáte zatím nastavený nárok na dovolenou. Kontaktujte prosím administrátora.</p>
-        {/if}
+                <div class="stat-box remaining">
+                    <div class="stat-title">Zbývá</div>
+                    <div class="stat-value" style="color: {if $remainingDays < 0}#e74c3c{elseif $remainingDays < 5}#f39c12{else}#27ae60{/if};">
+                        {$remainingDays|number:1,',',' '} dní
+                    </div>
+                </div>
+            {else}
+                <p class="alert alert-warning full-width">Pro rok {$currentYear} nemáte zatím nastavený nárok na dovolenou. Kontaktujte prosím administrátora.</p>
+            {/if}
+        </div>
     </div>
-</div>
 
-    <!-- Kalendář -->
+    <!-- Vlastní kalendář -->
     <div class="dashboard-card calendar-card">
         <div class="card-header">
             <h2>Kalendář dovolených</h2>
-            <div class="card-tools">
-                <span class="card-legend">
-                    <span class="legend-item"><span class="legend-color" style="background-color: #28a745;"></span> Schváleno</span>
-                    <span class="legend-item"><span class="legend-color" style="background-color: #ffc107;"></span> Čeká na schválení</span>
-                    <span class="legend-item"><span class="legend-color" style="background-color: #dc3545;"></span> Zamítnuto</span>
-                </span>
-            </div>
         </div>
         <div class="card-body">
-            <div id="calendar" class="dashboard-calendar"></div>
+            <div id="vacationCalendar"></div>
         </div>
     </div>
 
@@ -216,63 +209,93 @@
 {/block}
 
 {block scripts}
-    <script src="{$basePath}/js/fullcalendar/index.global.min.js"></script>
+    <!-- Vlastní kalendář CSS a JS -->
+    <link rel="stylesheet" href="{$basePath}/css/vacation-calendar.css">
+    <script src="{$basePath}/js/vacation-calendar.js"></script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-            var modal = document.getElementById('eventDetailModal');
-            var modalCloseButton = modal.querySelector('.close-button');
+            // České státní svátky pro rok {$currentYear}
+            const holidays = {$czechHolidays|noescape};
+            
+            // Data pro kalendář - převedeme z PHP do JS formátu
+            const calendarEvents = {$calendarEventsJson|noescape};
+            
+            // Transformace dat pro vlastní kalendář
+            const transformedEvents = calendarEvents.map(event => ({
+                id: event.id,
+                user_id: event.extendedProps?.userName || 'Neznámý',
+                userName: event.extendedProps?.userName || 'Neznámý uživatel',
+                start_date: event.start,
+                end_date: event.end ? new Date(new Date(event.end).getTime() - 24*60*60*1000).toISOString().split('T')[0] : event.start,
+                type: event.extendedProps?.type === 'Nemocenská' ? 'sick_leave' : 
+                      event.extendedProps?.type === 'Jiné' ? 'other' : 'vacation',
+                status: event.extendedProps?.status || 'pending',
+                note: event.extendedProps?.note || '',
+                duration: event.extendedProps?.duration || 1
+            }));
 
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                height: 'auto',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,listMonth'
+            // Inicializace vlastního kalendáře
+            const calendar = new VacationCalendar('vacationCalendar', {
+                holidays: holidays,
+                onEventClick: function(eventData, element) {
+                    // Najdeme původní událost v datech
+                    const originalEvent = calendarEvents.find(e => e.id == eventData.id);
+                    if (originalEvent && originalEvent.extendedProps) {
+                        showEventDetail(originalEvent);
+                    }
                 },
-                events: {$calendarEventsJson|noescape},
-                locale: 'cs',
-                buttonText: {
-                    today: 'Dnes',
-                    month: 'Měsíc',
-                    week: 'Týden',
-                    listMonth: 'Seznam'
+                onDayClick: function(date, element) {
+                    // Přesměrování na formulář nové žádosti s předvyplněným datem
+                    const dateStr = date.toISOString().split('T')[0];
+                    window.location.href = {link Vacation:newRequest} + '?date=' + dateStr;
                 },
-                firstDay: 1,
-                eventClick: function(info) {
-                    var props = info.event.extendedProps;
-
-                    document.getElementById('modalTitle').innerText = 'Detail: ' + info.event.title;
-                    document.getElementById('modalUserName').innerText = props.userName || '-';
-                    document.getElementById('modalType').innerText = props.type ? props.type.charAt(0).toUpperCase() + props.type.slice(1) : '-';
-                    document.getElementById('modalStatus').innerText = props.status ? props.status.charAt(0).toUpperCase() + props.status.slice(1) : '-';
-                    document.getElementById('modalStartDate').innerText = props.startDateFull + ' (' + props.startDayPortionText + ')';
-                    document.getElementById('modalEndDate').innerText = props.endDateFull + ' (' + props.endDayPortionText + ')';
-                    document.getElementById('modalDuration').innerText = (props.duration || '-') + ' dní';
-                    document.getElementById('modalNote').innerText = props.note || '-';
-                    document.getElementById('modalRequestedAt').innerText = props.requestedAt || '-';
-
-                    modal.style.display = 'block';
-                    info.jsEvent.preventDefault();
+                onMonthChange: function(date) {
+                    console.log('Měsíc změněn na:', date);
+                    // Zde můžeme případně načíst nová data pro jiný měsíc
                 }
             });
 
-            if (modalCloseButton) {
-                modalCloseButton.onclick = function() {
+            // Nastavení událostí
+            calendar.setEvents(transformedEvents);
+
+            // Funkce pro zobrazení detailu události
+            function showEventDetail(event) {
+                const modal = document.getElementById('eventDetailModal');
+                const props = event.extendedProps;
+                
+                document.getElementById('modalTitle').innerText = 'Detail: ' + event.title;
+                document.getElementById('modalUserName').innerText = props.userName || '-';
+                document.getElementById('modalType').innerText = props.type || '-';
+                document.getElementById('modalStatus').innerText = props.status || '-';
+                document.getElementById('modalStartDate').innerText = (props.startDateFull || '') + 
+                    ' (' + (props.startDayPortionText || '') + ')';
+                document.getElementById('modalEndDate').innerText = (props.endDateFull || '') + 
+                    ' (' + (props.endDayPortionText || '') + ')';
+                document.getElementById('modalDuration').innerText = (props.duration || '-') + ' dní';
+                document.getElementById('modalNote').innerText = props.note || '-';
+                document.getElementById('modalRequestedAt').innerText = props.requestedAt || '-';
+
+                modal.style.display = 'block';
+            }
+
+            // Ovládání modálního okna
+            const modal = document.getElementById('eventDetailModal');
+            const closeButton = modal.querySelector('.close-button');
+
+            if (closeButton) {
+                closeButton.onclick = function() {
                     modal.style.display = 'none';
                 }
             }
 
             window.onclick = function(event) {
-                if (event.target == modal) {
+                if (event.target === modal) {
                     modal.style.display = 'none';
                 }
             }
 
-            calendar.render();
-            
-            // Tooltip funkce pro poznámky
+            // Tooltip funkce pro poznámky v tabulce
             const tooltips = document.querySelectorAll('.note-tooltip');
             tooltips.forEach(tooltip => {
                 tooltip.addEventListener('mouseenter', e => {

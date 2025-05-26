@@ -274,23 +274,31 @@
 
         // Funkce pro zobrazení detailu události
         function showEventDetail(event) {
-            const modal = document.getElementById('eventDetailModal');
-            const props = event.extendedProps;
+    console.log('showEventDetail called with:', event);
+    
+    const modal = document.getElementById('eventDetailModal');
+    if (!modal) {
+        console.error('Modal element not found!');
+        return;
+    }
+    
+    // Upravená logika - fallback na samotný event objekt
+    const props = event.extendedProps || event;
 
-            document.getElementById('modalTitle').innerText = 'Detail: ' + event.title;
-            document.getElementById('modalUserName').innerText = props.userName || '-';
-            document.getElementById('modalType').innerText = props.type || '-';
-            document.getElementById('modalStatus').innerText = props.status || '-';
-            document.getElementById('modalStartDate').innerText = (props.startDateFull || '') +
-                ' (' + (props.startDayPortionText || '') + ')';
-            document.getElementById('modalEndDate').innerText = (props.endDateFull || '') +
-                ' (' + (props.endDayPortionText || '') + ')';
-            document.getElementById('modalDuration').innerText = (props.duration || '-') + ' dní';
-            document.getElementById('modalNote').innerText = props.note || '-';
-            document.getElementById('modalRequestedAt').innerText = props.requestedAt || '-';
+    document.getElementById('modalTitle').innerText = 'Detail: ' + (event.title || 'Událost');
+    document.getElementById('modalUserName').innerText = props.userName || event.userName || '-';
+    document.getElementById('modalType').innerText = props.type || event.type || '-';
+    document.getElementById('modalStatus').innerText = props.status || event.status || '-';
+    document.getElementById('modalStartDate').innerText = (props.startDateFull || event.start_date || '') +
+        ' (' + (props.startDayPortionText || '') + ')';
+    document.getElementById('modalEndDate').innerText = (props.endDateFull || event.end_date || '') +
+        ' (' + (props.endDayPortionText || '') + ')';
+    document.getElementById('modalDuration').innerText = (props.duration || '-') + ' dní';
+    document.getElementById('modalNote').innerText = props.note || event.note || '-';
+    document.getElementById('modalRequestedAt').innerText = props.requestedAt || '-';
 
-            modal.style.display = 'block';
-        }
+    modal.style.display = 'block';
+}
 
         // Ovládání modálního okna
         const modal = document.getElementById('eventDetailModal');

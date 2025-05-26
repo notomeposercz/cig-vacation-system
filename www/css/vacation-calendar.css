@@ -183,6 +183,7 @@
 .vacation-events {
     flex: 1;
     display: block;
+    flex-direction: column;
     position: relative;
     min-height: 120px; /* Zvětšeno pro více událostí */
     overflow: visible;
@@ -203,25 +204,19 @@
     font-weight: 500;
     overflow: visible;
     z-index: 1;
+    margin-bottom: 3px;
 }
 
-/* Pozicování podle track čísla - rozšířeno na 10 tracks */
 .vacation-event[data-track="0"] { top: 2px; }
-.vacation-event[data-track="1"] { top: 25px; }
+.vacation-event[data-track="1"] { top: 24px; }
 .vacation-event[data-track="2"] { top: 46px; }
-.vacation-event[data-track="3"] { top: 69px; }
-.vacation-event[data-track="4"] { top: 85px; }
-.vacation-event[data-track="5"] { top: 105px; }
-.vacation-event[data-track="6"] { top: 125px; }
-.vacation-event[data-track="7"] { top: 145px; }
-.vacation-event[data-track="8"] { top: 165px; }
-.vacation-event[data-track="9"] { top: 185px; }
-
-/* Fallback pro další tracks - dynamické pozicování */
-.vacation-event:not([data-track="0"]):not([data-track="1"]):not([data-track="2"]):not([data-track="3"]):not([data-track="4"]):not([data-track="5"]):not([data-track="6"]):not([data-track="7"]):not([data-track="8"]):not([data-track="9"]) {
-    position: relative;
-    margin-top: 2px;
-}
+.vacation-event[data-track="3"] { top: 68px; }
+.vacation-event[data-track="4"] { top: 90px; }
+.vacation-event[data-track="5"] { top: 112px; }
+.vacation-event[data-track="6"] { top: 134px; }
+.vacation-event[data-track="7"] { top: 156px; }
+.vacation-event[data-track="8"] { top: 178px; }
+.vacation-event[data-track="9"] { top: 200px; }
 
 /* Hover efekt pro jednotlivé části */
 .vacation-event:hover {
@@ -262,7 +257,7 @@
     border-radius: 3px 0 0 3px;
     padding-left: 5px;
     padding-right: 0;
-    margin-right: -1px;
+    margin-right: 1px;
     margin-left: 6px;
 }
 
@@ -270,7 +265,7 @@
     border-radius: 0 3px 3px 0;
     padding-left: 0;
     padding-right: 5px;
-    margin-left: 1px;
+    margin-left: -1px;
     justify-content: flex-end;
     margin-right: 4px;
 }
@@ -278,8 +273,8 @@
 .vacation-event.middle {
     border-radius: 0;
     padding: 0;
-    margin-left: 1px;
-    margin-right: -1px;
+    margin-left: -1px;
+    margin-right: 1px;
 }
 
 .vacation-event.single {
@@ -574,9 +569,113 @@
 
 /* Expanded state transitions */
 .calendar-day.expanded {
+    position: relative;
     z-index: 1000;
 }
 
 .calendar-day.expanded .vacation-events {
-    transition: all 0.3s ease;
+    position: absolute;
+    left: -1px;  /* Přesah přes okraj buňky */
+    right: -1px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 8px;
+    z-index: 100;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: -1px;
+    border-radius: 4px;
+}
+
+/* === VYLEPŠENÉ ZOBRAZENÍ UDÁLOSTÍ === */
+.calendar-day.expanded {
+    position: relative;
+    z-index: 1000;
+}
+
+.calendar-day.expanded .vacation-event {
+    position: relative;  /* Změnit na relative v expanded view */
+    left: auto;
+    right: auto;
+    width: auto;
+    margin: 4px 0;
+    padding: 4px 8px;
+}
+
+.calendar-day.expanded .vacation-event {
+    position: absolute;  /* Zachovat absolutní pozicování i v expanded view */
+    display: block !important;
+}
+
+/* Vylepšený indikátor více událostí */
+.more-events {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 11px;
+    background: #f3f4f6;
+    color: #374151;
+    padding: 2px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    z-index: 2;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+    min-width: 24px;
+    text-align: center;
+    line-height: 16px;
+}
+
+.more-events:hover {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+    transform: translateY(-1px);
+}
+
+/* Skryté události */
+.vacation-event.hidden {
+    display: none;
+}
+
+/* Dark mode podpora pro expanded view */
+@media (prefers-color-scheme: dark) {
+    .calendar-day.expanded .vacation-events {
+        background: #1f2937;
+        border-color: #4b5563;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    .more-events {
+        background: #374151;
+        color: #e5e7eb;
+        border-color: #4b5563;
+    }
+    
+    .more-events:hover {
+        background: #4f46e5;
+        color: white;
+        border-color: #4f46e5;
+    }
+}
+
+.calendar-day.expanded .more-events {
+    position: sticky;
+    bottom: 0;
+    width: calc(100% - 16px);  /* Odečíst padding kontejneru */
+    margin: 4px auto 0;
+    background: #4f46e5;
+    color: white;
+    text-align: center;
+}
+
+.vacation-event .event-user {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 10px);  /* Ponechat prostor pro padding */
 }

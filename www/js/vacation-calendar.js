@@ -243,17 +243,21 @@ class VacationCalendar {
  * Přidání indikátorů "více událostí" pro dny s mnoha událostmi
  */
 addMoreEventsIndicators() {
-    const maxVisibleEvents = this.options.maxEventsPerDay || 3; // Reduce default visible events
+    const maxVisibleEvents = this.options.maxEventsPerDay || 3;
     
     this.container.querySelectorAll('.vacation-events').forEach(container => {
         const events = container.querySelectorAll('.vacation-event');
-        const dayElement = container.closest('.calendar-day');
+        const visibleEvents = Array.from(events).filter(e => 
+            parseInt(e.dataset.track) < maxVisibleEvents
+        );
         
         if (events.length > maxVisibleEvents) {
             // Skryjeme události nad limitem
-            Array.from(events).slice(maxVisibleEvents).forEach(event => {
-                event.style.display = 'none';
-            });
+            Array.from(events)
+                .filter(e => parseInt(e.dataset.track) >= maxVisibleEvents)
+                .forEach(event => {
+                    event.style.display = 'none';
+                });
             
             // Přidáme indikátor
             let moreIndicator = container.querySelector('.more-events');
@@ -264,23 +268,24 @@ addMoreEventsIndicators() {
             
             const hiddenCount = events.length - maxVisibleEvents;
             moreIndicator.textContent = `+${hiddenCount}`;
-            moreIndicator.title = `Klikněte pro zobrazení všech ${events.length} událostí`;
+            moreIndicator.title = `Zobrazit všech ${events.length} událostí`;
             
-            // Event listener pro zobrazení všech událostí
             moreIndicator.addEventListener('click', (e) => {
                 e.stopPropagation();
+                const dayElement = container.closest('.calendar-day');
                 
-                // Toggle expanded state
                 if (dayElement.classList.contains('expanded')) {
                     dayElement.classList.remove('expanded');
-                    // Hide events again
-                    Array.from(events).slice(maxVisibleEvents).forEach(event => {
-                        event.style.display = 'none';
-                    });
+                    // Skrýt události nad limit
+                    Array.from(events)
+                        .filter(e => parseInt(e.dataset.track) >= maxVisibleEvents)
+                        .forEach(event => {
+                            event.style.display = 'none';
+                        });
                     moreIndicator.textContent = `+${hiddenCount}`;
                 } else {
                     dayElement.classList.add('expanded');
-                    // Show all events
+                    // Zobrazit všechny události
                     events.forEach(event => {
                         event.style.display = 'block';
                     });

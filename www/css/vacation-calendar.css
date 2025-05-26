@@ -597,16 +597,13 @@
 }
 
 .calendar-day.expanded .vacation-event {
-    position: relative;  /* Změnit na relative v expanded view */
-    left: auto;
-    right: auto;
-    width: auto;
-    margin: 4px 0;
-    padding: 4px 8px;
-}
-
-.calendar-day.expanded .vacation-event {
-    position: absolute;  /* Zachovat absolutní pozicování i v expanded view */
+    position: relative !important;  
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    width: auto !important;
+    margin: 4px 0 !important;
+    padding: 4px 8px !important;
     display: block !important;
 }
 

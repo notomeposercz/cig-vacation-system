@@ -243,14 +243,21 @@
         const calendar = new VacationCalendar('vacationCalendar', {
             holidays: holidays,
             onEventClick: function(eventData, element) {
-                // Najdeme původní událost v datech
-                const originalEvent = calendarEvents.find(e => e.id == eventData.id);
-                console.log('Kliknuto na event:', eventData, 'Nalezený originál:', originalEvent);
+    console.log('Event click data:', eventData);
+    console.log('Available events:', calendarEvents);
+    
+    // Zkuste najít podle ID, pokud ne, tak podle userId
+    let originalEvent = calendarEvents.find(e => e.id == eventData.id);
+    if (!originalEvent) {
+        originalEvent = calendarEvents.find(e => e.user_id == eventData.userId);
+    }
+    
+    console.log('Nalezený originál:', originalEvent);
 
-                if (originalEvent && originalEvent.extendedProps) {
-                    showEventDetail(originalEvent);
-                }
-            },
+    if (originalEvent) {
+        showEventDetail(originalEvent);
+    }
+},
             onDayClick: function(date, element) {
                 // Přesměrování na formulář nové žádosti s předvyplněným datem
                 const dateStr = date.toISOString().split('T')[0];

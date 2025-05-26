@@ -54,6 +54,7 @@ class VacationCalendar {
         };
 
         this.init();
+        this.initModal();
     }
 
     /**
@@ -215,6 +216,68 @@ class VacationCalendar {
         return classes;
     }
 
+
+
+
+initModal() {
+  const overlay = document.createElement('div');
+  overlay.id = 'vacation-modal-overlay';
+  overlay.className = 'vacation-modal-overlay';
+  overlay.innerHTML = `
+    <div class="vacation-modal">
+      <div class="vacation-modal-header">
+        <span>Detail události</span>
+        <button class="vacation-modal-close">&times;</button>
+      </div>
+      <div class="vacation-modal-body"></div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // zavírání modalu
+  overlay.querySelector('.vacation-modal-close')
+    .addEventListener('click', () => this.closeModal());
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) this.closeModal();
+  });
+
+  this.modalOverlay = overlay;
+}
+
+showModal(html) {
+  this.modalOverlay.querySelector('.vacation-modal-body').innerHTML = html;
+  this.modalOverlay.classList.add('show');
+}
+
+closeModal() {
+  this.modalOverlay.classList.remove('show');
+}
+
+// Přepište handleEventClick, aby používalo nový modal místo alert()
+handleEventClick(eventElement) {
+  // váš callback
+  if (this.options.onEventClick) {
+    const eventData = {
+      id: eventElement.dataset.eventId,
+      userId: eventElement.dataset.userId
+    };
+    this.options.onEventClick(eventData, eventElement);
+  }
+
+  // vystavíme HTML se strukturou detailu
+  // rozdělíme title podle řádků
+  const parts = eventElement.title.split('\n');
+  const [name, typeStatus, period] = parts;
+  const html = `
+    <h3>${name}</h3>
+    <p><strong>${typeStatus}</strong></p>
+    <p>${period}</p>
+  `;
+  this.showModal(html);
+}
+
+
+
+
     /**
      * Vykreslení událostí s track managementem
      */
@@ -340,20 +403,12 @@ showAllEventsInDay(container) {
     }
 
     /**
-     * Generování unikátního ID pro událost
+     * Generování skutečně unikátního ID pro událost
+     * Použijeme přímo backendové eventGroup.id
      */
     generateEventId(eventGroup) {
--        const userId = (eventGroup.userName || '').replace(/\s+/g, '');
--        const startDate = eventGroup.start_date.replace(/-/g, '');
--        return `event_${userId}_${startDate}`;
--    }
-+    /**
-+     * Generování skutečně unikátního ID pro událost
-+     * Použijeme přímo backendové eventGroup.id
-+     */
-+    generateEventId(eventGroup) {
-+        return `event_${eventGroup.id}`;
-+    }
+        return `event_${eventGroup.id}`;
+    }
 
     /**
      * Přidání hover event listenerů pro zvýraznění celé události
@@ -691,17 +746,22 @@ showAllEventsInDay(container) {
     }
 
     /**
-     * Klik na událost
+     * Klik na událost: kromě volání callbacku zobrazí i alert s tooltipem
      */
     handleEventClick(eventElement) {
-        if (this.options.onEventClick) {
-            const eventData = {
-                id: eventElement.dataset.eventId,
-                userId: eventElement.dataset.userId
-            };
-            this.options.onEventClick(eventData, eventElement);
-        }
+    // 1) Spustí se váš callback, pokud byl definován při inicializaci
+    if (this.options.onEventClick) {
+        const eventData = {
+            id: eventElement.dataset.eventId,
+            userId: eventElement.dataset.userId
+        };
+        this.options.onEventClick(eventData, eventElement);
     }
+
+    // 2) Zobrazí se jednoduché popup okno s detailem události
+    const detailText = eventElement.title;
+    window.alert(detailText);
+}
 
     /**
      * Klik na den

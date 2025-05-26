@@ -87,6 +87,8 @@ final class DashboardPresenter extends BasePresenter
         // 4. Příprava událostí pro vlastní kalendář
         $calendarEvents = $this->getCalendarEventsForCustomCalendar();
 
+\Tracy\Debugger::barDump($this->getCalendarEventsForCustomCalendar(), 'calendarEvents');
+
         // 5. Předání dat do šablony
         $this->template->message = "Vítejte na vašem dashboardu!";
         $this->template->myRequests = $myVacationRequests;

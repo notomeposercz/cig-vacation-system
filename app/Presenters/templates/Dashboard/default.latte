@@ -214,109 +214,121 @@
     <script src="{$basePath}/js/vacation-calendar.js"></script>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // České státní svátky pro rok {$currentYear}
-            const holidays = {$czechHolidays|noescape};
-            
-            // Data pro kalendář - převedeme z PHP do JS formátu
-            const calendarEvents = {$calendarEventsJson|noescape};
-            
-            // Transformace dat pro vlastní kalendář
-            const transformedEvents = calendarEvents.map(event => ({
-                id: event.id,
-                user_id: event.extendedProps?.userName || 'Neznámý',
-                userName: event.extendedProps?.userName || 'Neznámý uživatel',
-                start_date: event.start,
-                end_date: event.end ? new Date(new Date(event.end).getTime() - 24*60*60*1000).toISOString().split('T')[0] : event.start,
-                type: event.extendedProps?.type === 'Nemocenská' ? 'sick_leave' : 
-                      event.extendedProps?.type === 'Jiné' ? 'other' : 'vacation',
-                status: event.extendedProps?.status || 'pending',
-                note: event.extendedProps?.note || '',
-                duration: event.extendedProps?.duration || 1
-            }));
+    document.addEventListener('DOMContentLoaded', function() {
+        // České státní svátky pro rok {$currentYear}
+        const holidays = {$czechHolidays|noescape};
 
-            // Inicializace vlastního kalendáře
-            const calendar = new VacationCalendar('vacationCalendar', {
-                holidays: holidays,
-                onEventClick: function(eventData, element) {
-                    // Najdeme původní událost v datech
-                    const originalEvent = calendarEvents.find(e => e.id == eventData.id);
-                    if (originalEvent && originalEvent.extendedProps) {
-                        showEventDetail(originalEvent);
-                    }
-                },
-                onDayClick: function(date, element) {
-                    // Přesměrování na formulář nové žádosti s předvyplněným datem
-                    const dateStr = date.toISOString().split('T')[0];
-                    window.location.href = {link Vacation:newRequest} + '?date=' + dateStr;
-                },
-                onMonthChange: function(date) {
-                    console.log('Měsíc změněn na:', date);
-                    // Zde můžeme případně načíst nová data pro jiný měsíc
+        // Data pro kalendář - převedeme z PHP do JS formátu
+        const calendarEvents = {$calendarEventsJson|noescape};
+
+        // LOGUJEME VŠE PRO KONTROLU
+        console.log('Holidays:', holidays);
+        console.log('calendarEvents (z PHP):', calendarEvents);
+
+        // Pokud není žádný event, napiš do konzole!
+        if (!Array.isArray(calendarEvents) || calendarEvents.length === 0) {
+            console.warn('calendarEvents je prázdné nebo není pole!');
+        } else {
+            // Pro kontrolu vypiš první událost:
+            console.log('První událost:', calendarEvents[0]);
+        }
+
+        // NEPŘEPOČÍTÁVÁME DATUMY, JSOU UŽ V POŘÁDKU Z PHP!
+        const transformedEvents = calendarEvents; // žádná další manipulace
+
+        // LOGUJEME transformedEvents
+        console.log('transformedEvents (co posíláme do kalendáře):', transformedEvents);
+
+        // Inicializace vlastního kalendáře
+        const calendar = new VacationCalendar('vacationCalendar', {
+            holidays: holidays,
+            onEventClick: function(eventData, element) {
+                // Najdeme původní událost v datech
+                const originalEvent = calendarEvents.find(e => e.id == eventData.id);
+                console.log('Kliknuto na event:', eventData, 'Nalezený originál:', originalEvent);
+
+                if (originalEvent && originalEvent.extendedProps) {
+                    showEventDetail(originalEvent);
                 }
+            },
+            onDayClick: function(date, element) {
+                // Přesměrování na formulář nové žádosti s předvyplněným datem
+                const dateStr = date.toISOString().split('T')[0];
+                window.location.href = {link Vacation:newRequest} + '?date=' + dateStr;
+            },
+            onMonthChange: function(date) {
+                console.log('Měsíc změněn na:', date);
+                // Zde můžeme případně načíst nová data pro jiný měsíc
+            }
+        });
+
+        // Nastavení událostí
+        calendar.setEvents(transformedEvents);
+
+        // --- Tracy Debug Bar reaktivace (v Latte šabloně) ---
+        // Pokud Tracy lišta zmizela, zkontroluj, že nemáš v configu vypnutý Tracy Debugger
+        // nebo že Tracy není blokovaná v prohlížeči (např. adblock, CSP)
+        // Pro test: přidej do šablony na konec <body> (Latte: {tracyBar} )
+        // nebo v PHP: \Tracy\Debugger::enable();
+
+        // Funkce pro zobrazení detailu události
+        function showEventDetail(event) {
+            const modal = document.getElementById('eventDetailModal');
+            const props = event.extendedProps;
+
+            document.getElementById('modalTitle').innerText = 'Detail: ' + event.title;
+            document.getElementById('modalUserName').innerText = props.userName || '-';
+            document.getElementById('modalType').innerText = props.type || '-';
+            document.getElementById('modalStatus').innerText = props.status || '-';
+            document.getElementById('modalStartDate').innerText = (props.startDateFull || '') +
+                ' (' + (props.startDayPortionText || '') + ')';
+            document.getElementById('modalEndDate').innerText = (props.endDateFull || '') +
+                ' (' + (props.endDayPortionText || '') + ')';
+            document.getElementById('modalDuration').innerText = (props.duration || '-') + ' dní';
+            document.getElementById('modalNote').innerText = props.note || '-';
+            document.getElementById('modalRequestedAt').innerText = props.requestedAt || '-';
+
+            modal.style.display = 'block';
+        }
+
+        // Ovládání modálního okna
+        const modal = document.getElementById('eventDetailModal');
+        const closeButton = modal.querySelector('.close-button');
+
+        if (closeButton) {
+            closeButton.onclick = function() {
+                modal.style.display = 'none';
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Tooltip funkce pro poznámky v tabulce
+        const tooltips = document.querySelectorAll('.note-tooltip');
+        tooltips.forEach(tooltip => {
+            tooltip.addEventListener('mouseenter', e => {
+                const tooltipText = e.target.getAttribute('data-tooltip');
+                if(!tooltipText) return;
+
+                const tooltipEl = document.createElement('div');
+                tooltipEl.className = 'tooltip-box';
+                tooltipEl.innerText = tooltipText;
+                document.body.appendChild(tooltipEl);
+
+                const rect = e.target.getBoundingClientRect();
+                tooltipEl.style.left = rect.left + (rect.width / 2) - (tooltipEl.offsetWidth / 2) + 'px';
+                tooltipEl.style.top = rect.bottom + 10 + 'px';
             });
 
-            // Nastavení událostí
-            calendar.setEvents(transformedEvents);
-
-            // Funkce pro zobrazení detailu události
-            function showEventDetail(event) {
-                const modal = document.getElementById('eventDetailModal');
-                const props = event.extendedProps;
-                
-                document.getElementById('modalTitle').innerText = 'Detail: ' + event.title;
-                document.getElementById('modalUserName').innerText = props.userName || '-';
-                document.getElementById('modalType').innerText = props.type || '-';
-                document.getElementById('modalStatus').innerText = props.status || '-';
-                document.getElementById('modalStartDate').innerText = (props.startDateFull || '') + 
-                    ' (' + (props.startDayPortionText || '') + ')';
-                document.getElementById('modalEndDate').innerText = (props.endDateFull || '') + 
-                    ' (' + (props.endDayPortionText || '') + ')';
-                document.getElementById('modalDuration').innerText = (props.duration || '-') + ' dní';
-                document.getElementById('modalNote').innerText = props.note || '-';
-                document.getElementById('modalRequestedAt').innerText = props.requestedAt || '-';
-
-                modal.style.display = 'block';
-            }
-
-            // Ovládání modálního okna
-            const modal = document.getElementById('eventDetailModal');
-            const closeButton = modal.querySelector('.close-button');
-
-            if (closeButton) {
-                closeButton.onclick = function() {
-                    modal.style.display = 'none';
-                }
-            }
-
-            window.onclick = function(event) {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
-            }
-
-            // Tooltip funkce pro poznámky v tabulce
-            const tooltips = document.querySelectorAll('.note-tooltip');
-            tooltips.forEach(tooltip => {
-                tooltip.addEventListener('mouseenter', e => {
-                    const tooltipText = e.target.getAttribute('data-tooltip');
-                    if(!tooltipText) return;
-                    
-                    const tooltipEl = document.createElement('div');
-                    tooltipEl.className = 'tooltip-box';
-                    tooltipEl.innerText = tooltipText;
-                    document.body.appendChild(tooltipEl);
-                    
-                    const rect = e.target.getBoundingClientRect();
-                    tooltipEl.style.left = rect.left + (rect.width / 2) - (tooltipEl.offsetWidth / 2) + 'px';
-                    tooltipEl.style.top = rect.bottom + 10 + 'px';
-                });
-                
-                tooltip.addEventListener('mouseleave', () => {
-                    const tooltipEl = document.querySelector('.tooltip-box');
-                    if(tooltipEl) tooltipEl.remove();
-                });
+            tooltip.addEventListener('mouseleave', () => {
+                const tooltipEl = document.querySelector('.tooltip-box');
+                if(tooltipEl) tooltipEl.remove();
             });
         });
-    </script>
+    });
+</script>
 {/block}

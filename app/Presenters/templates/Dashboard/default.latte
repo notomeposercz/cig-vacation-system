@@ -265,12 +265,6 @@
         // Nastavení událostí
         calendar.setEvents(transformedEvents);
 
-        // --- Tracy Debug Bar reaktivace (v Latte šabloně) ---
-        // Pokud Tracy lišta zmizela, zkontroluj, že nemáš v configu vypnutý Tracy Debugger
-        // nebo že Tracy není blokovaná v prohlížeči (např. adblock, CSP)
-        // Pro test: přidej do šablony na konec <body> (Latte: {tracyBar} )
-        // nebo v PHP: \Tracy\Debugger::enable();
-
         // Funkce pro zobrazení detailu události
         function showEventDetail(event) {
             const modal = document.getElementById('eventDetailModal');

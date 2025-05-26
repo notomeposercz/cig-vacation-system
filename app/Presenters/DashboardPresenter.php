@@ -165,27 +165,31 @@ final class DashboardPresenter extends BasePresenter
 
                 // Vytvoření události v kompatibilním formátu
                 $event = [
-                    'id' => $vacation->id,
-                    'title' => $title,
-                    'start' => $startDateObject->format('Y-m-d'),
-                    'end' => $endDateForCalendar->format('Y-m-d'),
-                    'backgroundColor' => $backgroundColor,
-                    'borderColor' => $borderColor,
-                    'textColor' => '#ffffff',
-                    'extendedProps' => [
-                        'userName' => $userName,
-                        'type' => $typeText,
-                        'status' => $vacation->status,
-                        'startDateFull' => $startDateObject->format('j. F Y'),
-                        'endDateFull' => $endDateObject->format('j. F Y'),
-                        'startDayPortionText' => $this->formatDayPortion($vacation->start_day_portion),
-                        'endDayPortionText' => $this->formatDayPortion($vacation->end_day_portion),
-                        'duration' => $vacation->calculated_duration_days,
-                        'note' => $vacation->note ?: '-',
-                        'requestedAt' => $createdAtObject ? $createdAtObject->format('j.n.Y H:i') : '-',
-                    ]
-                ];
-                
+    'id' => $vacation->id,
+    'title' => $title,
+    'start' => $startDateObject->format('Y-m-d'),
+    'end' => $endDateForCalendar->format('Y-m-d'),
+    'backgroundColor' => $backgroundColor,
+    'borderColor' => $borderColor,
+    'textColor' => '#ffffff',
+    'userName' => $userName,
+    'type' => $vacation->type,        // ← přidej tento řádek
+    'status' => $vacation->status,    // ← přidej tento řádek
+    'extendedProps' => [
+        'userName' => $userName,
+        'type' => $typeText,
+        'status' => $vacation->status,
+        'startDateFull' => $startDateObject->format('j. F Y'),
+        'endDateFull' => $endDateObject->format('j. F Y'),
+        'startDayPortionText' => $this->formatDayPortion($vacation->start_day_portion),
+        'endDayPortionText' => $this->formatDayPortion($vacation->end_day_portion),
+        'duration' => $vacation->calculated_duration_days,
+        'note' => $vacation->note ?: '-',
+        'requestedAt' => $createdAtObject ? $createdAtObject->format('j.n.Y H:i') : '-',
+    ]
+];
+$event['start_date'] = $event['start'];
+$event['end_date'] = $event['end'];
                 $events[] = $event;
                 
             } catch (\Exception $ex) {

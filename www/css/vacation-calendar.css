@@ -208,8 +208,8 @@
 /* Pozicování podle track čísla - rozšířeno na 10 tracks */
 .vacation-event[data-track="0"] { top: 2px; }
 .vacation-event[data-track="1"] { top: 25px; }
-.vacation-event[data-track="2"] { top: 45px; }
-.vacation-event[data-track="3"] { top: 65px; }
+.vacation-event[data-track="2"] { top: 46px; }
+.vacation-event[data-track="3"] { top: 69px; }
 .vacation-event[data-track="4"] { top: 85px; }
 .vacation-event[data-track="5"] { top: 105px; }
 .vacation-event[data-track="6"] { top: 125px; }

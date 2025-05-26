@@ -1,29 +1,40 @@
-.vacation-modal-overlay {
+/* Overlay modalu – ve výchozím stavu skryté */
+#vacation-modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6) !important;
+  display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1000 !important;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease-in-out;
 }
-.vacation-modal-overlay.show {
-  opacity: 1;
-  pointer-events: auto;
+
+/* Zobrazení modalu po přidání třídy .show */
+#vacation-modal-overlay.show {
+  display: flex;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
-.vacation-modal {
+
+/* Vnitřní box modalu */
+#vacation-modal-overlay .vacation-modal {
   background: #fff;
   border-radius: 6px;
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   overflow: hidden;
   font-family: sans-serif;
 }
-.vacation-modal-header {
+
+/* Hlavička modalu */
+#vacation-modal-overlay .vacation-modal-header {
   background: #0366d6;
   color: #fff;
   padding: 12px 16px;
@@ -31,7 +42,9 @@
   justify-content: space-between;
   align-items: center;
 }
-.vacation-modal-header button.vacation-modal-close {
+
+/* Tlačítko zavření */
+#vacation-modal-overlay .vacation-modal-close {
   background: transparent;
   border: none;
   color: #fff;
@@ -39,11 +52,15 @@
   line-height: 1;
   cursor: pointer;
 }
-.vacation-modal-body {
+
+/* Tělo modalu */
+#vacation-modal-overlay .vacation-modal-body {
   padding: 16px;
   color: #333;
   line-height: 1.4;
 }
-.vacation-modal-body h3 {
+
+/* Nadpis v modalu */
+#vacation-modal-overlay .vacation-modal-body h3 {
   margin-top: 0;
 }

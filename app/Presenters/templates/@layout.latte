@@ -10,10 +10,10 @@
     <link rel="stylesheet" href="{$basePath}/css/style.css">
     
     {* Vlastní kalendář CSS - načítá se jen když je potřeba *}
-    {ifset #content && $presenter->getName() === 'Dashboard'}
+    {if $presenter->getName() === 'Dashboard'}
         <link rel="stylesheet" href="{$basePath}/css/vacation-calendar.css">
-<link rel="stylesheet" href="{$basePath}/css/vacation-calendar-modal.css">
-    {/ifset}
+	<link rel="stylesheet" href="{$basePath}/css/vacation-calendar-modal.css">
+    {/if}
 </head>
 <body>
     <header>

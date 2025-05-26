@@ -240,62 +240,76 @@ class VacationCalendar {
     }
 
     /**
-     * Přidání indikátorů "více událostí" pro dny s mnoha událostmi
-     */
-    addMoreEventsIndicators() {
-        const maxVisibleEvents = this.options.maxEventsPerDay || 5;
+ * Přidání indikátorů "více událostí" pro dny s mnoha událostmi
+ */
+addMoreEventsIndicators() {
+    const maxVisibleEvents = this.options.maxEventsPerDay || 3; // Reduce default visible events
+    
+    this.container.querySelectorAll('.vacation-events').forEach(container => {
+        const events = container.querySelectorAll('.vacation-event');
+        const dayElement = container.closest('.calendar-day');
         
-        // Projdeme všechny dny a spočítáme události
-        this.container.querySelectorAll('.vacation-events').forEach(container => {
-            const events = container.querySelectorAll('.vacation-event');
+        if (events.length > maxVisibleEvents) {
+            // Skryjeme události nad limitem
+            Array.from(events).slice(maxVisibleEvents).forEach(event => {
+                event.style.display = 'none';
+            });
             
-            if (events.length > maxVisibleEvents) {
-                // Skryjeme události nad limitem
-                Array.from(events).slice(maxVisibleEvents).forEach(event => {
-                    event.style.display = 'none';
-                });
-                
-                // Přidáme indikátor
-                const moreIndicator = document.createElement('div');
+            // Přidáme indikátor
+            let moreIndicator = container.querySelector('.more-events');
+            if (!moreIndicator) {
+                moreIndicator = document.createElement('div');
                 moreIndicator.className = 'more-events';
-                moreIndicator.textContent = `+${events.length - maxVisibleEvents}`;
-                moreIndicator.title = `Klikněte pro zobrazení všech ${events.length} událostí`;
-                
-                // Event listener pro zobrazení všech událostí
-                moreIndicator.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.showAllEventsInDay(container);
-                });
-                
-                container.appendChild(moreIndicator);
             }
-        });
-    }
-
-    /**
-     * Zobrazení všech událostí v daném dni
-     */
-    showAllEventsInDay(container) {
-        // Zobrazíme všechny skryté události
-        container.querySelectorAll('.vacation-event[style*="display: none"]').forEach(event => {
-            event.style.display = 'flex';
-        });
-        
-        // Odstraníme indikátor
-        const moreIndicator = container.querySelector('.more-events');
-        if (moreIndicator) {
-            moreIndicator.remove();
+            
+            const hiddenCount = events.length - maxVisibleEvents;
+            moreIndicator.textContent = `+${hiddenCount}`;
+            moreIndicator.title = `Klikněte pro zobrazení všech ${events.length} událostí`;
+            
+            // Event listener pro zobrazení všech událostí
+            moreIndicator.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                // Toggle expanded state
+                if (dayElement.classList.contains('expanded')) {
+                    dayElement.classList.remove('expanded');
+                    // Hide events again
+                    Array.from(events).slice(maxVisibleEvents).forEach(event => {
+                        event.style.display = 'none';
+                    });
+                    moreIndicator.textContent = `+${hiddenCount}`;
+                } else {
+                    dayElement.classList.add('expanded');
+                    // Show all events
+                    events.forEach(event => {
+                        event.style.display = 'block';
+                    });
+                    moreIndicator.textContent = 'Méně';
+                }
+            });
+            
+            container.appendChild(moreIndicator);
         }
-        
-        // Dočasně zvětšíme kontejner
-        container.style.minHeight = '200px';
-        
-        // Po 5 sekundách vrátíme zpět (nebo při kliku jinam)
-        setTimeout(() => {
-            this.renderEvents(); // Znovu vykreslíme normálně
-        }, 5000);
-    }
+    });
+}
 
+/**
+ * Zobrazení všech událostí v daném dni
+ */
+showAllEventsInDay(container) {
+    const dayElement = container.closest('.calendar-day');
+    const events = container.querySelectorAll('.vacation-event');
+    const moreIndicator = container.querySelector('.more-events');
+    
+    dayElement.classList.add('expanded');
+    events.forEach(event => {
+        event.style.display = 'block';
+    });
+    
+    if (moreIndicator) {
+        moreIndicator.textContent = 'Méně';
+    }
+}
     /**
      * Vykreslení skupiny událostí (kontinuální proužek) - zjednodušeno
      */

@@ -16,7 +16,7 @@ class VacationCalendar {
             showWeekends: true,
             allowNavigation: true,
             showLegend: true,
-            maxEventsPerDay: 3,
+            maxEventsPerDay: 5,
             onEventClick: null,
             onDayClick: null,
             onMonthChange: null,
@@ -243,7 +243,7 @@ class VacationCalendar {
  * Přidání indikátorů "více událostí" pro dny s mnoha událostmi
  */
 addMoreEventsIndicators() {
-    const maxVisibleEvents = this.options.maxEventsPerDay || 3;
+    const maxVisibleEvents = this.options.maxEventsPerDay || 5;
     
     this.container.querySelectorAll('.vacation-events').forEach(container => {
         const events = container.querySelectorAll('.vacation-event');
@@ -343,10 +343,17 @@ showAllEventsInDay(container) {
      * Generování unikátního ID pro událost
      */
     generateEventId(eventGroup) {
-        const userId = (eventGroup.userName || '').replace(/\s+/g, '');
-        const startDate = eventGroup.start_date.replace(/-/g, '');
-        return `event_${userId}_${startDate}`;
-    }
+-        const userId = (eventGroup.userName || '').replace(/\s+/g, '');
+-        const startDate = eventGroup.start_date.replace(/-/g, '');
+-        return `event_${userId}_${startDate}`;
+-    }
++    /**
++     * Generování skutečně unikátního ID pro událost
++     * Použijeme přímo backendové eventGroup.id
++     */
++    generateEventId(eventGroup) {
++        return `event_${eventGroup.id}`;
++    }
 
     /**
      * Přidání hover event listenerů pro zvýraznění celé události
@@ -428,19 +435,19 @@ showAllEventsInDay(container) {
     }
 
     /**
-     * Přidělení tracks (úrovní) událostem pro správné řazení
+     * Přidělení tracks (úrovní) událostem pro správné řazení - OPRAVENO
      */
     assignTracksToEvents(events) {
-        // Seřadíme události podle začátku, pak podle konce
+        // Seřadíme události podle začátku, pak podle konce - OPRAVENO: používáme parseDateSafe
         events.sort((a, b) => {
-            const startA = new Date(a.start_date);
-            const startB = new Date(b.start_date);
+            const startA = this.parseDateSafe(a.start_date);
+            const startB = this.parseDateSafe(b.start_date);
             if (startA.getTime() !== startB.getTime()) {
                 return startA.getTime() - startB.getTime();
             }
             // Pokud začínají stejně, delší událost má prioritu (menší track)
-            const endA = new Date(a.end_date);
-            const endB = new Date(b.end_date);
+            const endA = this.parseDateSafe(a.end_date);
+            const endB = this.parseDateSafe(b.end_date);
             return endB.getTime() - endA.getTime();
         });
 
@@ -448,8 +455,8 @@ showAllEventsInDay(container) {
         const timeline = [];
         
         events.forEach((event, index) => {
-            const eventStart = new Date(event.start_date);
-            const eventEnd = new Date(event.end_date);
+            const eventStart = this.parseDateSafe(event.start_date);
+            const eventEnd = this.parseDateSafe(event.end_date);
             
             // Najdeme nejnižší dostupný track
             let trackIndex = 0;
@@ -461,8 +468,8 @@ showAllEventsInDay(container) {
                 
                 for (let assignedEvent of timeline) {
                     if (assignedEvent.track === trackIndex) {
-                        const assignedStart = new Date(assignedEvent.start_date);
-                        const assignedEnd = new Date(assignedEvent.end_date);
+                        const assignedStart = this.parseDateSafe(assignedEvent.start_date);
+                        const assignedEnd = this.parseDateSafe(assignedEvent.end_date);
                         
                         // Kontrola překrývání
                         if (eventStart <= assignedEnd && eventEnd >= assignedStart) {
@@ -488,7 +495,7 @@ showAllEventsInDay(container) {
     }
 
     /**
-     * Seskupení událostí podle období
+     * Seskupení událostí podle období - OPRAVENO
      */
     groupEventsByDateRange() {
         const grouped = {};
@@ -499,7 +506,7 @@ showAllEventsInDay(container) {
             if (!grouped[key]) {
                 grouped[key] = {
                     ...event,
-                    dates: this.getDateRange(new Date(event.start_date), new Date(event.end_date))
+                    dates: this.getDateRange(this.parseDateSafe(event.start_date), this.parseDateSafe(event.end_date))
                 };
             }
         });
@@ -561,11 +568,11 @@ showAllEventsInDay(container) {
     }
 
     /**
-     * Tooltip text
+     * Tooltip text - OPRAVENO pro správné zobrazení datumů
      */
     getEventTooltip(event) {
-        const startDate = new Date(event.start_date).toLocaleDateString('cs-CZ');
-        const endDate = new Date(event.end_date).toLocaleDateString('cs-CZ');
+        const startDate = this.formatDateCzech(event.start_date);
+        const endDate = this.formatDateCzech(event.end_date);
         const type = this.getTypeLabel(event.type);
         const status = this.getStatusLabel(event.status);
         
@@ -743,7 +750,30 @@ showAllEventsInDay(container) {
      */
     
     formatDate(date) {
-        return date.toISOString().split('T')[0];
+       const year  = date.getFullYear();
+       const month = String(date.getMonth() + 1).padStart(2, '0');
+       const day   = String(date.getDate()).padStart(2, '0');
+       return `${year}-${month}-${day}`;
+   }
+
+    /**
+     * NOVÁ METODA: Bezpečné parsování datumu bez timezone problémů
+     */
+    parseDateSafe(dateString) {
+        // Vytvoříme datum explicitně v lokální timezone s půlnocí
+        const parts = dateString.split('-');
+        return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12, 0, 0);
+    }
+
+    /**
+     * NOVÁ METODA: Formátování datumu do českého formátu bez timezone problémů
+     */
+    formatDateCzech(dateString) {
+        const date = this.parseDateSafe(dateString);
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}.${month}.${year}`;
     }
 
     isToday(date) {

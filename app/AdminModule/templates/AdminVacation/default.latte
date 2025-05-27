@@ -3,332 +3,37 @@
 {block title}Administrace - Žádosti o dovolenou{/block}
 
 {block content}
-    <div class="admin-vacation-header">
-        <h1>Administrace - Žádosti o dovolenou</h1>
-        <div class="bulk-actions" style="display: none;" id="bulkActions">
-            <button type="button" class="btn btn-danger" id="bulkDeleteBtn">
-                <i class="fas fa-trash"></i> Smazat vybrané
-            </button>
-        </div>
-    </div>
+    <h1>Administrace - Žádosti o dovolenou</h1>
 
-    <form method="post" id="bulkForm">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th width="40">
-                        <input type="checkbox" id="selectAll" title="Vybrat vše">
-                    </th>
-                    <th>Žadatel</th>
-                    <th>Od</th>
-                    <th>Do</th>
-                    <th>Počet dní</th>
-                    <th>Typ</th>
-                    <th>Stav</th>
-                    <th>Poznámka</th>
-                    <th>Podáno</th>
-                    <th>Akce</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr n:foreach="$requests as $request" class="status-{$request->status}-row">
-                    <td>
-                        <input type="checkbox" name="selected_requests[]" value="{$request->id}" class="request-checkbox">
-                    </td>
-                    <td>{$request->user->first_name} {$request->user->last_name}</td>
-                    <td>{$request->start_date|date:'j. F Y'}</td>
-                    <td>{$request->end_date|date:'j. F Y'}</td>
-                    <td class="text-right">{$request->calculated_duration_days|number:1,',',' '}</td>
-                    <td>{$request->type|firstUpper}</td>
-                    <td>
-                        <span class="status-badge status-{$request->status}">
-                            {$request->status|firstUpper}
-                        </span>
-                    </td>
-                    <td>
-                        {if $request->note}
-                            <span class="note-tooltip" data-tooltip="{$request->note}">
-                                {$request->note|truncate:30}
-                            </span>
-                        {else}
-                            <span class="text-muted">-</span>
-                        {/if}
-                    </td>
-                    <td>{$request->created_at|date:'j.n.Y H:i'}</td>
-                    <td class="action-buttons">
-                        {if $request->status === 'pending'}
-                            <a n:href="approve! id => $request->id" 
-                               class="btn btn-success btn-sm" 
-                               onclick="return confirm('Opravdu chcete schválit tuto žádost?')"
-                               title="Schválit žádost">
-                                <i class="fas fa-check"></i>
-                            </a>
-                            <a n:href="reject! id => $request->id" 
-                               class="btn btn-warning btn-sm" 
-                               onclick="return confirm('Opravdu chcete zamítnout tuto žádost?')"
-                               title="Zamítnout žádost">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        {/if}
-                        <a n:href="delete! id => $request->id" 
-                           class="btn btn-danger btn-sm" 
-                           onclick="return confirm('POZOR: Tato akce je nevratná!\\n\\nOpravdu chcete TRVALE SMAZAT tuto žádost?\\n\\nŽadatel: {$request->user->first_name} {$request->user->last_name}\\nObdobí: {$request->start_date|date:\'j.n.Y\'} - {$request->end_date|date:\'j.n.Y\'}')"
-                           title="Smazat žádost">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </form>
-
-    {* Přidáme CSS styly *}
-    <style>
-        .admin-vacation-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .bulk-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .action-buttons {
-            white-space: nowrap;
-        }
-
-        .action-buttons .btn {
-            margin-right: 5px;
-        }
-
-        .status-badge {
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-
-        .status-pending {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
-        .status-approved {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status-rejected {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .note-tooltip {
-            cursor: help;
-            border-bottom: 1px dotted #999;
-            position: relative;
-        }
-
-        .text-muted {
-            color: #6c757d;
-            font-style: italic;
-        }
-
-        /* Zvýraznění řádků při hoveru */
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        /* Specifické styly pro status řádky */
-        .status-pending-row {
-            background-color: rgba(255, 243, 205, 0.3);
-        }
-
-        .status-approved-row {
-            background-color: rgba(212, 237, 218, 0.3);
-        }
-
-        .status-rejected-row {
-            background-color: rgba(248, 215, 218, 0.3);
-        }
-
-        /* Checkbox styling */
-        #selectAll, .request-checkbox {
-            transform: scale(1.2);
-            margin: 0;
-        }
-
-        /* Button improvements */
-        .btn-sm {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-            border-radius: 0.2rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.15s ease-in-out;
-        }
-
-        .btn-success {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background-color: #218838;
-        }
-
-        .btn-warning {
-            background-color: #ffc107;
-            color: #212529;
-        }
-
-        .btn-warning:hover {
-            background-color: #e0a800;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
-    </style>
-
-    {* JavaScript funkcionalita *}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const selectAllCheckbox = document.getElementById('selectAll');
-        const checkboxes = document.querySelectorAll('.request-checkbox');
-        const bulkActions = document.getElementById('bulkActions');
-        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-        const bulkForm = document.getElementById('bulkForm');
-
-        // Funkce pro aktualizaci viditelnosti hromadných akcí
-        function updateBulkActions() {
-            const checkedBoxes = document.querySelectorAll('.request-checkbox:checked');
-            if (checkedBoxes.length > 0) {
-                bulkActions.style.display = 'flex';
-            } else {
-                bulkActions.style.display = 'none';
-            }
-        }
-
-        // "Vybrat vše" checkbox
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', function() {
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = this.checked;
-                });
-                updateBulkActions();
-            });
-        }
-
-        // Jednotlivé checkboxy
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                // Aktualizace "vybrat vše" checkboxu
-                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-                const noneChecked = Array.from(checkboxes).every(cb => !cb.checked);
-                
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = allChecked;
-                    selectAllCheckbox.indeterminate = !allChecked && !noneChecked;
-                }
-                
-                updateBulkActions();
-            });
-        });
-
-        // Hromadné mazání
-        if (bulkDeleteBtn) {
-            bulkDeleteBtn.addEventListener('click', function() {
-                const checkedBoxes = document.querySelectorAll('.request-checkbox:checked');
-                if (checkedBoxes.length === 0) {
-                    alert('Nebyla vybrána žádná žádost ke smazání.');
-                    return;
-                }
-
-                const count = checkedBoxes.length;
-                const confirmMessage = `POZOR: Tato akce je NEVRATNÁ!
-
-Opravdu chcete TRVALE SMAZAT ${count} vybraných žádostí?
-
-Tato akce:
-- Smaže žádosti z databáze
-- Nelze ji vrátit zpět
-- Ovlivní historii žádostí
-
-Pokračovat?`;
-
-                if (confirm(confirmMessage)) {
-                    bulkForm.action = {link bulkDelete!};
-                    bulkForm.submit();
-                }
-            });
-        }
-
-        // Tooltip funkce pro poznámky
-        const tooltips = document.querySelectorAll('.note-tooltip');
-        tooltips.forEach(tooltip => {
-            tooltip.addEventListener('mouseenter', function(e) {
-                const tooltipText = e.target.getAttribute('data-tooltip');
-                if (!tooltipText) return;
-
-                // Vytvořit tooltip element
-                const tooltipEl = document.createElement('div');
-                tooltipEl.className = 'custom-tooltip';
-                tooltipEl.textContent = tooltipText;
-                
-                // Styly pro tooltip
-                Object.assign(tooltipEl.style, {
-                    position: 'absolute',
-                    background: '#333',
-                    color: 'white',
-                    padding: '8px 12px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    zIndex: '1000',
-                    maxWidth: '300px',
-                    wordWrap: 'break-word',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                    pointerEvents: 'none'
-                });
-
-                document.body.appendChild(tooltipEl);
-
-                // Pozice tooltip
-                const rect = e.target.getBoundingClientRect();
-                const tooltipRect = tooltipEl.getBoundingClientRect();
-                
-                let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-                let top = rect.bottom + 8;
-
-                // Kontrola, aby tooltip nezmizel z obrazovky
-                if (left < 5) left = 5;
-                if (left + tooltipRect.width > window.innerWidth - 5) {
-                    left = window.innerWidth - tooltipRect.width - 5;
-                }
-                
-                tooltipEl.style.left = left + 'px';
-                tooltipEl.style.top = top + 'px';
-            });
-
-            tooltip.addEventListener('mouseleave', function() {
-                const existingTooltip = document.querySelector('.custom-tooltip');
-                if (existingTooltip) {
-                    existingTooltip.remove();
-                }
-            });
-        });
-    });
-    </script>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Žadatel</th>
+                <th>Od</th>
+                <th>Do</th>
+                <th>Počet dní</th>
+                <th>Typ</th>
+                <th>Stav</th>
+                <th>Poznámka</th>
+                <th>Podáno</th>
+                <th>Akce</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr n:foreach="$requests as $request" class="status-{$request->status}-row">
+                <td>{$request->user->first_name} {$request->user->last_name}</td>
+                <td>{$request->start_date|date:'j. F Y'}</td>
+                <td>{$request->end_date|date:'j. F Y'}</td>
+                <td class="text-right">{$request->calculated_duration_days|number:1,',',' '}</td>
+                <td>{$request->type|firstUpper}</td>
+                <td>{$request->status|firstUpper}</td>
+                <td>{$request->note}</td>
+                <td>{$request->created_at|date:'j.n.Y H:i'}</td>
+                <td>
+    <a n:href="approve! id => $request->id" class="btn btn-success btn-sm">Schválit</a>
+    <a n:href="reject! id => $request->id" class="btn btn-danger btn-sm">Zamítnout</a>
+</td>
+            </tr>
+        </tbody>
+    </table>
 {/block}

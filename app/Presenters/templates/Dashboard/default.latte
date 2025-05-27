@@ -165,7 +165,7 @@
 <div id="eventDetailModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 id="modalTitle">Detail žádosti</h2>
+            <span id="modalTitle">Žádost</span> <!-- Upraveno z původního "Detail žádosti" -->
             <span class="close-button">&times;</span>
         </div>
         <div class="modal-body">
@@ -180,13 +180,11 @@
                 </div>
                 <div class="info-group">
                     <div class="info-label">Stav</div>
-                    <div class="info-value" id="modalStatus">-</div>
+                    <div class="info-value" id="modalStatus">-</div> <!-- Barevné rozlišení přidáno pomocí CSS -->
                 </div>
-                <div class="info-group">
+                <div class="info-group dates"> <!-- Spojeno do jednoho řádku -->
                     <div class="info-label">Od</div>
                     <div class="info-value" id="modalStartDate">-</div>
-                </div>
-                <div class="info-group">
                     <div class="info-label">Do</div>
                     <div class="info-value" id="modalEndDate">-</div>
                 </div>
@@ -240,22 +238,30 @@
         console.log('transformedEvents (co posíláme do kalendáře):', transformedEvents);
 
         // Inicializace vlastního kalendáře
+console.log('Seznam událostí z backendu:', calendarEvents);
         const calendar = new VacationCalendar('vacationCalendar', {
             holidays: holidays,
             onEventClick: function(eventData, element) {
-    console.log('Event click data:', eventData);
-    console.log('Available events:', calendarEvents);
-    
-    // Zkuste najít podle ID, pokud ne, tak podle userId
-    let originalEvent = calendarEvents.find(e => e.id == eventData.id);
+    console.log('Kliknuto na event:', eventData);
+
+    // Odstranění prefixu "event_" z ID
+    const normalizedId = eventData.id.replace('event_', '');
+    console.log('Normalizované ID:', normalizedId);
+
+    // Hledání události podle ID
+    let originalEvent = calendarEvents.find(e => e.id == normalizedId);
+    console.log('Nalezená událost podle normalizovaného ID:', originalEvent);
+
+    // Hledání podle userId, pokud není nalezena podle ID
     if (!originalEvent) {
         originalEvent = calendarEvents.find(e => e.user_id == eventData.userId);
+        console.log('Nalezená událost podle userId:', originalEvent);
     }
-    
-    console.log('Nalezený originál:', originalEvent);
 
     if (originalEvent) {
         showEventDetail(originalEvent);
+    } else {
+        console.warn('Událost nenalezena!');
     }
 },
             onDayClick: function(date, element) {

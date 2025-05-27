@@ -273,7 +273,7 @@ tr:hover {
 
 /* Styly pro modální okno */
 .modal {
-    display: none; /* Skryté by default */
+    display: block; /* Skryté by default */
     position: fixed;
     z-index: 1050;
     left: 0;

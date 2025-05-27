@@ -26,7 +26,7 @@
 #vacation-modal-overlay .vacation-modal {
   background: #fff;
   border-radius: 6px;
-  max-width: 400px;
+  max-width: 350px; /* Zmenšeno z původních 400px */
   width: 90%;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   overflow: hidden;
@@ -37,10 +37,13 @@
 #vacation-modal-overlay .vacation-modal-header {
   background: #0366d6;
   color: #fff;
-  padding: 12px 16px;
+  padding: 8px 12px; /* Snížený padding */
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 1.2em; /* Mírně menší nadpis */
+  font-weight: bold;
+  border-bottom: none; /* Odstranění čáry */
 }
 
 /* Tlačítko zavření */
@@ -63,4 +66,38 @@
 /* Nadpis v modalu */
 #vacation-modal-overlay .vacation-modal-body h3 {
   margin-top: 0;
+}
+
+/* Bloky informací v modalu */
+#eventDetailModal .modal-info-grid {
+  display: grid;
+  gap: 10px;
+}
+
+/* Barevné rozlišení stavu */
+#eventDetailModal .info-value.status-approved {
+  color: #28a745; /* Zelená pro schváleno */
+  font-weight: bold;
+}
+#eventDetailModal .info-value.status-pending {
+  color: #ffc107; /* Oranžová pro čeká na schválení */
+  font-weight: bold;
+}
+#eventDetailModal .info-value.status-rejected {
+  color: #dc3545; /* Červená pro zamítnuto */
+  font-weight: bold;
+}
+
+/* Od a Do na jednom řádku */
+#eventDetailModal .info-group.dates {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px; /* Mezera mezi "Od" a "Do" */
+}
+#eventDetailModal .info-group.dates .info-label {
+  flex-basis: 30%;
+  font-weight: bold;
+}
+#eventDetailModal .info-group.dates .info-value {
+  flex-basis: 70%;
 }

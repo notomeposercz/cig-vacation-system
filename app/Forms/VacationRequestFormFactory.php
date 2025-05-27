@@ -12,14 +12,18 @@ final class VacationRequestFormFactory
 {
     use Nette\SmartObject;
 
-    public function create(): Form
+    public function create(?string $prefilledDate = null): Form
     {
         $form = new Form;
+
+        // Pokud máme předvyplněné datum z kalendáře, použijeme ho
+        $defaultStartDate = $prefilledDate ?: (new DateTime())->format('Y-m-d');
+        $defaultEndDate = $prefilledDate ?: (new DateTime())->format('Y-m-d');
 
         $form->addText('start_date', 'Datum od:')
             ->setHtmlType('date')
             ->setRequired('Prosím, zadejte datum začátku dovolené.')
-            ->setDefaultValue((new DateTime())->format('Y-m-d'));
+            ->setDefaultValue($defaultStartDate);
 
         $dayPortionItems = [
             'FULL_DAY' => 'Celý den',
@@ -51,7 +55,7 @@ final class VacationRequestFormFactory
                 }
                 return true;
             }, 'Datum do nesmí být před Datem od nebo neplatný formát.')
-            ->setDefaultValue((new DateTime())->format('Y-m-d'));
+            ->setDefaultValue($defaultEndDate);
 
         $form->addSelect('end_day_portion', 'Poslední den:', $dayPortionItems)
             ->setDefaultValue('FULL_DAY')

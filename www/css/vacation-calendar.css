@@ -712,3 +712,55 @@ table .checkbox-column {
     background-color: #c9302c;
     border-color: #ac2925;
 }
+
+/* ... (zachovat všechny stávající styly) ... */
+
+/* === TÝDENNÍ POHLED === */
+.vacation-calendar.week-view .calendar-grid {
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.vacation-calendar.week-view .calendar-day {
+    min-height: 200px; /* Větší výška pro týdenní pohled */
+}
+
+.vacation-calendar.week-view .week-day {
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.vacation-calendar.week-view .week-day:last-child {
+    border-right: none;
+}
+
+.vacation-calendar.week-view .day-number {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.vacation-calendar.week-view .vacation-events {
+    min-height: 170px;
+    padding: 4px;
+}
+
+/* Responsive design pro týdenní pohled */
+@media (max-width: 768px) {
+    .vacation-calendar.week-view .calendar-day {
+        min-height: 120px;
+    }
+    
+    .vacation-calendar.week-view .vacation-events {
+        min-height: 90px;
+    }
+}
+
+@media (max-width: 480px) {
+    .vacation-calendar.week-view .calendar-day {
+        min-height: 80px;
+    }
+    
+    .vacation-calendar.week-view .vacation-events {
+        min-height: 50px;
+    }
+}

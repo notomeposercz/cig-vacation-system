@@ -17,9 +17,9 @@
             {/if}
         </div>
         <div class="dashboard-actions">
-            <a n:href="Vacation:newRequest" class="button primary-button">
+            <button id="newRequestBtn" class="button primary-button">
                 <i class="icon-plus"></i> Podat novou žádost o dovolenou
-            </a>
+            </button>
             {if $user->isInRole('admin')}
                 <a n:href="goToAdmin!" class="button secondary-button">
                     <i class="icon-cog"></i> Administrace
@@ -150,11 +150,11 @@
                     <div class="empty-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64">
                             <path fill="none" d="M0 0h24v24H0z"/>
-                            <path d="M20 22H4C3.44772 22 3 21.5523 3 21V3C3 2.44772 3.44772 2 4 2H20C20.5523 2 21 2.44772 21 3V21C21 21.5523 20.5523 22 20 22ZM19 20V4H5V20H19ZM8 7H16V9H8V7ZM8 11H16V13H8V11ZM8 15H13V17H8V15Z"/>
+                            <path d="M20 22H4C3.44772 22 3 21.5523 3 21V3C3 2.44772 3.44772 2 4 2H20C20.5523 2 21 2.44772 21 3V21C21 21.5523 20.5523 22 20 22ZM19 20V4H5V20H19ZM8 7H16V9H8V7ZM8 11H16V13H8V11Z"/>
                         </svg>
                     </div>
                     <p>Zatím nemáte žádné žádosti o dovolenou.</p>
-                    <a n:href="Vacation:newRequest" class="action-button primary">Vytvořit první žádost</a>
+                    <button id="firstRequestBtn" class="action-button primary">Vytvořit první žádost</button>
                 </div>
             {/if}
         </div>
@@ -165,7 +165,7 @@
 <div id="eventDetailModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <span id="modalTitle">Žádost</span> <!-- Upraveno z původního "Detail žádosti" -->
+            <span id="modalTitle">Žádost</span>
             <span class="close-button">&times;</span>
         </div>
         <div class="modal-body">
@@ -180,9 +180,9 @@
                 </div>
                 <div class="info-group">
                     <div class="info-label">Stav</div>
-                    <div class="info-value" id="modalStatus">-</div> <!-- Barevné rozlišení přidáno pomocí CSS -->
+                    <div class="info-value" id="modalStatus">-</div>
                 </div>
-                <div class="info-group dates"> <!-- Spojeno do jednoho řádku -->
+                <div class="info-group dates">
                     <div class="info-label">Od</div>
                     <div class="info-value" id="modalStartDate">-</div>
                     <div class="info-label">Do</div>
@@ -200,6 +200,21 @@
                     <div class="info-label">Podáno dne</div>
                     <div class="info-value" id="modalRequestedAt">-</div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{* --- Modální okno pro novou žádost --- *}
+<div id="newRequestModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <span id="newRequestModalTitle">Nová žádost o dovolenou</span>
+            <span class="close-button" id="closeNewRequestModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="newRequestFormContainer">
+                <div class="loading-spinner">Načítám formulář...</div>
             </div>
         </div>
     </div>
@@ -238,36 +253,36 @@
         console.log('transformedEvents (co posíláme do kalendáře):', transformedEvents);
 
         // Inicializace vlastního kalendáře
-console.log('Seznam událostí z backendu:', calendarEvents);
+        console.log('Seznam událostí z backendu:', calendarEvents);
         const calendar = new VacationCalendar('vacationCalendar', {
             holidays: holidays,
             onEventClick: function(eventData, element) {
-    console.log('Kliknuto na event:', eventData);
+                console.log('Kliknuto na event:', eventData);
 
-    // Odstranění prefixu "event_" z ID
-    const normalizedId = eventData.id.replace('event_', '');
-    console.log('Normalizované ID:', normalizedId);
+                // Odstranění prefixu "event_" z ID
+                const normalizedId = eventData.id.replace('event_', '');
+                console.log('Normalizované ID:', normalizedId);
 
-    // Hledání události podle ID
-    let originalEvent = calendarEvents.find(e => e.id == normalizedId);
-    console.log('Nalezená událost podle normalizovaného ID:', originalEvent);
+                // Hledání události podle ID
+                let originalEvent = calendarEvents.find(e => e.id == normalizedId);
+                console.log('Nalezená událost podle normalizovaného ID:', originalEvent);
 
-    // Hledání podle userId, pokud není nalezena podle ID
-    if (!originalEvent) {
-        originalEvent = calendarEvents.find(e => e.user_id == eventData.userId);
-        console.log('Nalezená událost podle userId:', originalEvent);
-    }
+                // Hledání podle userId, pokud není nalezena podle ID
+                if (!originalEvent) {
+                    originalEvent = calendarEvents.find(e => e.user_id == eventData.userId);
+                    console.log('Nalezená událost podle userId:', originalEvent);
+                }
 
-    if (originalEvent) {
-        showEventDetail(originalEvent);
-    } else {
-        console.warn('Událost nenalezena!');
-    }
-},
+                if (originalEvent) {
+                    showEventDetail(originalEvent);
+                } else {
+                    console.warn('Událost nenalezena!');
+                }
+            },
             onDayClick: function(date, element) {
-                // Přesměrování na formulář nové žádosti s předvyplněným datem
+                // Otevření popup okna s předvyplněným datem
                 const dateStr = date.toISOString().split('T')[0];
-                window.location.href = {link Vacation:newRequest} + '?date=' + dateStr;
+                openNewRequestModal(dateStr);
             },
             onMonthChange: function(date) {
                 console.log('Měsíc změněn na:', date);
@@ -278,47 +293,72 @@ console.log('Seznam událostí z backendu:', calendarEvents);
         // Nastavení událostí
         calendar.setEvents(transformedEvents);
 
+        // Event listenery pro tlačítka
+        document.getElementById('newRequestBtn').addEventListener('click', function() {
+            openNewRequestModal();
+        });
+
+        const firstRequestBtn = document.getElementById('firstRequestBtn');
+        if (firstRequestBtn) {
+            firstRequestBtn.addEventListener('click', function() {
+                openNewRequestModal();
+            });
+        }
+
         // Funkce pro zobrazení detailu události
         function showEventDetail(event) {
-    console.log('showEventDetail called with:', event);
-    
-    const modal = document.getElementById('eventDetailModal');
-    if (!modal) {
-        console.error('Modal element not found!');
-        return;
-    }
-    
-    // Upravená logika - fallback na samotný event objekt
-    const props = event.extendedProps || event;
+            console.log('showEventDetail called with:', event);
+            
+            const modal = document.getElementById('eventDetailModal');
+            if (!modal) {
+                console.error('Modal element not found!');
+                return;
+            }
+            
+            // Upravená logika - fallback na samotný event objekt
+            const props = event.extendedProps || event;
 
-    document.getElementById('modalTitle').innerText = 'Detail: ' + (event.title || 'Událost');
-    document.getElementById('modalUserName').innerText = props.userName || event.userName || '-';
-    document.getElementById('modalType').innerText = props.type || event.type || '-';
-    document.getElementById('modalStatus').innerText = props.status || event.status || '-';
-    document.getElementById('modalStartDate').innerText = (props.startDateFull || event.start_date || '') +
-        ' (' + (props.startDayPortionText || '') + ')';
-    document.getElementById('modalEndDate').innerText = (props.endDateFull || event.end_date || '') +
-        ' (' + (props.endDayPortionText || '') + ')';
-    document.getElementById('modalDuration').innerText = (props.duration || '-') + ' dní';
-    document.getElementById('modalNote').innerText = props.note || event.note || '-';
-    document.getElementById('modalRequestedAt').innerText = props.requestedAt || '-';
+            document.getElementById('modalTitle').innerText = 'Detail: ' + (event.title || 'Událost');
+            document.getElementById('modalUserName').innerText = props.userName || event.userName || '-';
+            document.getElementById('modalType').innerText = props.type || event.type || '-';
+            document.getElementById('modalStatus').innerText = props.status || event.status || '-';
+            document.getElementById('modalStartDate').innerText = (props.startDateFull || event.start_date || '') +
+                ' (' + (props.startDayPortionText || '') + ')';
+            document.getElementById('modalEndDate').innerText = (props.endDateFull || event.end_date || '') +
+                ' (' + (props.endDayPortionText || '') + ')';
+            document.getElementById('modalDuration').innerText = (props.duration || '-') + ' dní';
+            document.getElementById('modalNote').innerText = props.note || event.note || '-';
+            document.getElementById('modalRequestedAt').innerText = props.requestedAt || '-';
 
-    modal.style.display = 'block';
-}
+            modal.style.display = 'block';
+        }
 
-        // Ovládání modálního okna
-        const modal = document.getElementById('eventDetailModal');
-        const closeButton = modal.querySelector('.close-button');
+        // Ovládání modálního okna pro detail
+        const eventModal = document.getElementById('eventDetailModal');
+        const eventCloseButton = eventModal.querySelector('.close-button');
 
-        if (closeButton) {
-            closeButton.onclick = function() {
-                modal.style.display = 'none';
+        if (eventCloseButton) {
+            eventCloseButton.onclick = function() {
+                eventModal.style.display = 'none';
+            }
+        }
+
+        // Ovládání modálního okna pro novou žádost
+        const newRequestModal = document.getElementById('newRequestModal');
+        const newRequestCloseButton = document.getElementById('closeNewRequestModal');
+
+        if (newRequestCloseButton) {
+            newRequestCloseButton.onclick = function() {
+                closeNewRequestModal();
             }
         }
 
         window.onclick = function(event) {
-            if (event.target === modal) {
-                modal.style.display = 'none';
+            if (event.target === eventModal) {
+                eventModal.style.display = 'none';
+            }
+            if (event.target === newRequestModal) {
+                closeNewRequestModal();
             }
         }
 
@@ -345,5 +385,196 @@ console.log('Seznam událostí z backendu:', calendarEvents);
             });
         });
     });
-</script>
+
+    // Funkce pro otevření modálního okna nové žádosti
+    function openNewRequestModal(selectedDate) {
+        selectedDate = selectedDate || null;
+        const modal = document.getElementById('newRequestModal');
+        const container = document.getElementById('newRequestFormContainer');
+        
+        // Zobrazíme modal
+        modal.style.display = 'block';
+        
+        // Nastavíme title podle toho, zda je vybráno datum
+        const title = document.getElementById('newRequestModalTitle');
+        if (selectedDate) {
+            const dateObj = new Date(selectedDate);
+            const formattedDate = dateObj.toLocaleDateString('cs-CZ');
+            title.textContent = 'Nová žádost o dovolenou - ' + formattedDate;
+        } else {
+            title.textContent = 'Nová žádost o dovolenou';
+        }
+        
+        // Načteme formulář pomocí AJAX
+        const url = {link Vacation:newRequest} + (selectedDate ? '?date=' + selectedDate : '');
+        
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Extrahujeme pouze obsah formuláře z odpovědi
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const formContent = doc.querySelector('.form-container');
+            
+            if (formContent) {
+                container.innerHTML = formContent.innerHTML;
+                
+                // Přidáme event listener pro AJAX odeslání formuláře
+                const form = container.querySelector('form');
+                if (form) {
+                    form.addEventListener('submit', handleFormSubmit);
+                }
+                
+                // Upravíme action formuláře aby používal cancel handle místo odkazu
+                const cancelButton = container.querySelector('.button-secondary');
+                if (cancelButton) {
+                    cancelButton.onclick = function(e) {
+                        e.preventDefault();
+                        closeNewRequestModal();
+                    };
+                }
+            } else {
+                container.innerHTML = '<p>Chyba při načítání formuláře.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Chyba při načítání formuláře:', error);
+            container.innerHTML = '<p>Chyba při načítání formuláře.</p>';
+        });
+    }
+
+    // Funkce pro zavření modálního okna
+    function closeNewRequestModal() {
+        const modal = document.getElementById('newRequestModal');
+        modal.style.display = 'none';
+    }
+
+    // Funkce pro zpracování odeslání formuláře pomocí AJAX
+    function handleFormSubmit(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        // Odešleme formulář pomocí AJAX
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Úspěch - zavřeme modal a přesměrujeme
+                closeNewRequestModal();
+                
+                // Zobrazíme flash message
+                if (data.message) {
+                    showFlashMessage(data.message, 'success');
+                }
+                
+                // Obnovíme stránku pro aktualizaci dat
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                // Chyba - zobrazíme chybovou zprávu
+                if (data.errors) {
+                    // Zobrazíme chyby ve formuláři
+                    for (const [field, error] of Object.entries(data.errors)) {
+                        const input = form.querySelector('[name="' + field + '"]');
+                        if (input) {
+                            // Přidáme chybovou třídu a zprávu
+                            input.classList.add('error');
+                            
+                            // Najdeme nebo vytvoříme error element
+                            let errorEl = input.parentNode.querySelector('.error-message');
+                            if (!errorEl) {
+                                errorEl = document.createElement('div');
+                                errorEl.className = 'error-message';
+                                input.parentNode.appendChild(errorEl);
+                            }
+                            errorEl.textContent = error;
+                        }
+                    }
+                }
+                
+                if (data.message) {
+                    showFlashMessage(data.message, 'error');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Chyba při odesílání formuláře:', error);
+            showFlashMessage('Chyba při odesílání formuláře.', 'error');
+        });
+    }
+
+    // Funkce pro zobrazení flash message
+    function showFlashMessage(message, type) {
+        const flash = document.createElement('div');
+        flash.className = 'flash-message flash-' + type;
+        flash.textContent = message;
+        
+        // Přidáme na začátek stránky
+        document.body.insertBefore(flash, document.body.firstChild);
+        
+        // Odstraníme po 5 sekundách
+        setTimeout(() => {
+            flash.remove();
+        }, 5000);
+    }
+    </script>
+
+    <style>
+    /* Styly pro popup okno nové žádosti */
+    .modal-large .modal-content {
+        max-width: 600px;
+        width: 90%;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+
+    .flash-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 4px;
+        z-index: 10000;
+        max-width: 400px;
+    }
+
+    .flash-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .flash-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .error-message {
+        color: #e74c3c;
+        font-size: 0.875rem;
+        margin-top: 4px;
+    }
+
+    input.error, select.error, textarea.error {
+        border-color: #e74c3c !important;
+    }
+    </style>
 {/block}

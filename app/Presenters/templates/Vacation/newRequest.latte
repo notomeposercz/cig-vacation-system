@@ -5,6 +5,15 @@
 {block content}
 <h1>Nová žádost o dovolenou</h1>
 
+{if $selectedDate}
+<div class="selected-date-info">
+    <div class="info-box">
+        <i class="icon-calendar"></i>
+        <strong>Vybráno z kalendáře:</strong> {$selectedDate}
+    </div>
+</div>
+{/if}
+
 <div class="form-container">
     {control requestForm}
     
@@ -12,4 +21,27 @@
         <a n:href="cancel!" class="button button-secondary">Zpět na přehled</a>
     </div>
 </div>
+{/block}
+
+{block styles}
+<style>
+.selected-date-info {
+    margin-bottom: 20px;
+}
+
+.info-box {
+    background: #e3f2fd;
+    border: 1px solid #1976d2;
+    border-radius: 4px;
+    padding: 12px 16px;
+    color: #1565c0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-box i {
+    font-size: 16px;
+}
+</style>
 {/block}

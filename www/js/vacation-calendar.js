@@ -76,6 +76,17 @@ class VacationCalendar {
      * HTML struktura kalendáře
      */
     getCalendarHTML() {
+        if (this.currentView === 'week') {
+            return this.getWeekViewHTML();
+        } else {
+            return this.getMonthViewHTML();
+        }
+    }
+
+    /**
+     * HTML pro měsíční pohled
+     */
+    getMonthViewHTML() {
         const currentMonth = this.currentDate.getMonth();
         const currentYear = this.currentDate.getFullYear();
         const monthName = this.locale[this.options.locale].months[currentMonth];
@@ -92,19 +103,100 @@ class VacationCalendar {
     }
 
     /**
+     * HTML pro týdenní pohled
+     */
+    getWeekViewHTML() {
+        const weekRange = this.getCurrentWeekRange();
+        const startDate = weekRange.start;
+        const endDate = weekRange.end;
+        
+        const startFormatted = `${startDate.getDate()}. ${startDate.getMonth() + 1}.`;
+        const endFormatted = `${endDate.getDate()}. ${endDate.getMonth() + 1}. ${endDate.getFullYear()}`;
+        const weekTitle = `${startFormatted} - ${endFormatted}`;
+
+        return `
+            <div class="vacation-calendar week-view">
+                ${this.getHeaderHTML(weekTitle, '')}
+                ${this.getWeekdaysHTML()}
+                ${this.getWeekGridHTML()}
+                ${this.isLoading ? '<div class="calendar-loading"><div class="calendar-spinner"></div>Načítám...</div>' : ''}
+            </div>
+            ${this.options.showLegend ? this.getLegendHTML() : ''}
+        `;
+    }
+
+    /**
+     * Získání rozsahu aktuálního týdne
+     */
+    getCurrentWeekRange() {
+        const current = new Date(this.currentDate);
+        const dayOfWeek = current.getDay();
+        const diff = current.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Pondělí jako první den
+        
+        const monday = new Date(current.setDate(diff));
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        
+        return {
+            start: monday,
+            end: sunday
+        };
+    }
+
+    /**
+     * HTML mřížky pro týdenní pohled
+     */
+    getWeekGridHTML() {
+        const weekRange = this.getCurrentWeekRange();
+        const days = [];
+        
+        // Vytvoříme pole dnů pro aktuální týden
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(weekRange.start);
+            date.setDate(weekRange.start.getDate() + i);
+            
+            days.push({
+                date: date,
+                isCurrentMonth: true, // V týdenním pohledu zobrazujeme všechny dny
+                isToday: this.isToday(date),
+                isWeekend: this.isWeekend(date),
+                isHoliday: this.isHoliday(date)
+            });
+        }
+
+        let gridHTML = '';
+        days.forEach(day => {
+            const classes = this.getDayClasses(day);
+            const dateStr = this.formatDate(day.date);
+            
+            gridHTML += `
+                <div class="calendar-day week-day ${classes.join(' ')}" data-date="${dateStr}">
+                    <div class="day-number">${day.date.getDate()}</div>
+                    <div class="vacation-events" data-date="${dateStr}">
+                        <!-- Wydarzenia budou vloženy JavaScriptem -->
+                    </div>
+                </div>
+            `;
+        });
+
+        return `<div class="calendar-grid week-grid">${gridHTML}</div>`;
+    }
+
+    /**
      * HTML hlavičky kalendáře
      */
-    getHeaderHTML(monthName, year) {
+    getHeaderHTML(title, year) {
         const locale = this.locale[this.options.locale];
+        const yearDisplay = year ? ` ${year}` : '';
         
         return `
             <div class="calendar-header">
                 <div class="calendar-nav">
-                    <button class="calendar-nav-btn" data-action="prev-month" ${!this.options.allowNavigation ? 'disabled' : ''}>
+                    <button class="calendar-nav-btn" data-action="prev-period" ${!this.options.allowNavigation ? 'disabled' : ''}>
                         ‹ ${locale.prev}
                     </button>
-                    <h2 class="calendar-title">${monthName} ${year}</h2>
-                    <button class="calendar-nav-btn" data-action="next-month" ${!this.options.allowNavigation ? 'disabled' : ''}>
+                    <h2 class="calendar-title">${title}${yearDisplay}</h2>
+                    <button class="calendar-nav-btn" data-action="next-period" ${!this.options.allowNavigation ? 'disabled' : ''}>
                         ${locale.next} ›
                     </button>
                 </div>
@@ -143,7 +235,7 @@ class VacationCalendar {
     }
 
     /**
-     * HTML mřížky kalendáře
+     * HTML mřížky kalendáře (měsíční pohled)
      */
     getGridHTML() {
         const days = this.getCalendarDays();
@@ -167,7 +259,7 @@ class VacationCalendar {
     }
 
     /**
-     * Získání dnů pro kalendářní mřížku
+     * Získání dnů pro kalendářní mřížku (měsíční pohled)
      */
     getCalendarDays() {
         const year = this.currentDate.getFullYear();
@@ -235,86 +327,89 @@ class VacationCalendar {
             this.renderEventGroup(eventGroup);
         });
         
-        // Přidáme indikátory "více událostí" kde je potřeba
-        this.addMoreEventsIndicators();
+        // Přidáme indikátory "více událostí" kde je potřeba (pouze v měsíčním pohledu)
+        if (this.currentView === 'month') {
+            this.addMoreEventsIndicators();
+        }
     }
 
     /**
- * Přidání indikátorů "více událostí" pro dny s mnoha událostmi
- */
-addMoreEventsIndicators() {
-    const maxVisibleEvents = this.options.maxEventsPerDay || 5;
-    
-    this.container.querySelectorAll('.vacation-events').forEach(container => {
-        const events = container.querySelectorAll('.vacation-event');
-        const visibleEvents = Array.from(events).filter(e => 
-            parseInt(e.dataset.track) < maxVisibleEvents
-        );
+     * Přidání indikátorů "více událostí" pro dny s mnoha událostmi
+     */
+    addMoreEventsIndicators() {
+        const maxVisibleEvents = this.options.maxEventsPerDay || 5;
         
-        if (events.length > maxVisibleEvents) {
-            // Skryjeme události nad limitem
-            Array.from(events)
-                .filter(e => parseInt(e.dataset.track) >= maxVisibleEvents)
-                .forEach(event => {
-                    event.style.display = 'none';
-                });
+        this.container.querySelectorAll('.vacation-events').forEach(container => {
+            const events = container.querySelectorAll('.vacation-event');
+            const visibleEvents = Array.from(events).filter(e => 
+                parseInt(e.dataset.track) < maxVisibleEvents
+            );
             
-            // Přidáme indikátor
-            let moreIndicator = container.querySelector('.more-events');
-            if (!moreIndicator) {
-                moreIndicator = document.createElement('div');
-                moreIndicator.className = 'more-events';
-            }
-            
-            const hiddenCount = events.length - maxVisibleEvents;
-            moreIndicator.textContent = `+${hiddenCount}`;
-            moreIndicator.title = `Zobrazit všech ${events.length} událostí`;
-            
-            moreIndicator.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const dayElement = container.closest('.calendar-day');
-                
-                if (dayElement.classList.contains('expanded')) {
-                    dayElement.classList.remove('expanded');
-                    // Skrýt události nad limit
-                    Array.from(events)
-                        .filter(e => parseInt(e.dataset.track) >= maxVisibleEvents)
-                        .forEach(event => {
-                            event.style.display = 'none';
-                        });
-                    moreIndicator.textContent = `+${hiddenCount}`;
-                } else {
-                    dayElement.classList.add('expanded');
-                    // Zobrazit všechny události
-                    events.forEach(event => {
-                        event.style.display = 'block';
+            if (events.length > maxVisibleEvents) {
+                // Skryjeme události nad limitem
+                Array.from(events)
+                    .filter(e => parseInt(e.dataset.track) >= maxVisibleEvents)
+                    .forEach(event => {
+                        event.style.display = 'none';
                     });
-                    moreIndicator.textContent = 'Méně';
+                
+                // Přidáme indikátor
+                let moreIndicator = container.querySelector('.more-events');
+                if (!moreIndicator) {
+                    moreIndicator = document.createElement('div');
+                    moreIndicator.className = 'more-events';
                 }
-            });
-            
-            container.appendChild(moreIndicator);
-        }
-    });
-}
-
-/**
- * Zobrazení všech událostí v daném dni
- */
-showAllEventsInDay(container) {
-    const dayElement = container.closest('.calendar-day');
-    const events = container.querySelectorAll('.vacation-event');
-    const moreIndicator = container.querySelector('.more-events');
-    
-    dayElement.classList.add('expanded');
-    events.forEach(event => {
-        event.style.display = 'block';
-    });
-    
-    if (moreIndicator) {
-        moreIndicator.textContent = 'Méně';
+                
+                const hiddenCount = events.length - maxVisibleEvents;
+                moreIndicator.textContent = `+${hiddenCount}`;
+                moreIndicator.title = `Zobrazit všech ${events.length} událostí`;
+                
+                moreIndicator.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dayElement = container.closest('.calendar-day');
+                    
+                    if (dayElement.classList.contains('expanded')) {
+                        dayElement.classList.remove('expanded');
+                        // Skrýt události nad limit
+                        Array.from(events)
+                            .filter(e => parseInt(e.dataset.track) >= maxVisibleEvents)
+                            .forEach(event => {
+                                event.style.display = 'none';
+                            });
+                        moreIndicator.textContent = `+${hiddenCount}`;
+                    } else {
+                        dayElement.classList.add('expanded');
+                        // Zobrazit všechny události
+                        events.forEach(event => {
+                            event.style.display = 'block';
+                        });
+                        moreIndicator.textContent = 'Méně';
+                    }
+                });
+                
+                container.appendChild(moreIndicator);
+            }
+        });
     }
-}
+
+    /**
+     * Zobrazení všech událostí v daném dni
+     */
+    showAllEventsInDay(container) {
+        const dayElement = container.closest('.calendar-day');
+        const events = container.querySelectorAll('.vacation-event');
+        const moreIndicator = container.querySelector('.more-events');
+        
+        dayElement.classList.add('expanded');
+        events.forEach(event => {
+            event.style.display = 'block';
+        });
+        
+        if (moreIndicator) {
+            moreIndicator.textContent = 'Méně';
+        }
+    }
+
     /**
      * Vykreslení skupiny událostí (kontinuální proužek) - zjednodušeno
      */
@@ -629,12 +724,12 @@ showAllEventsInDay(container) {
      * Připojení event listenerů
      */
     attachEventListeners() {
-        // Navigace měsíců
+        // Navigace měsíců/týdnů
         this.container.addEventListener('click', (e) => {
-            if (e.target.dataset.action === 'prev-month') {
-                this.previousMonth();
-            } else if (e.target.dataset.action === 'next-month') {
-                this.nextMonth();
+            if (e.target.dataset.action === 'prev-period') {
+                this.previousPeriod();
+            } else if (e.target.dataset.action === 'next-period') {
+                this.nextPeriod();
             } else if (e.target.dataset.view) {
                 this.setView(e.target.dataset.view);
             } else if (e.target.closest('.vacation-event')) {
@@ -646,10 +741,14 @@ showAllEventsInDay(container) {
     }
 
     /**
-     * Navigace - předchozí měsíc
+     * Navigace - předchozí období
      */
-    previousMonth() {
-        this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+    previousPeriod() {
+        if (this.currentView === 'week') {
+            this.currentDate.setDate(this.currentDate.getDate() - 7);
+        } else {
+            this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+        }
         this.render();
         
         if (this.options.onMonthChange) {
@@ -658,15 +757,33 @@ showAllEventsInDay(container) {
     }
 
     /**
-     * Navigace - následující měsíc
+     * Navigace - následující období
      */
-    nextMonth() {
-        this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+    nextPeriod() {
+        if (this.currentView === 'week') {
+            this.currentDate.setDate(this.currentDate.getDate() + 7);
+        } else {
+            this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+        }
         this.render();
         
         if (this.options.onMonthChange) {
             this.options.onMonthChange(this.currentDate);
         }
+    }
+
+    /**
+     * Navigace - předchozí měsíc (zachováno pro zpětnou kompatibilitu)
+     */
+    previousMonth() {
+        this.previousPeriod();
+    }
+
+    /**
+     * Navigace - následující měsíc (zachováno pro zpětnou kompatibilitu)
+     */
+    nextMonth() {
+        this.nextPeriod();
     }
 
     /**
@@ -675,25 +792,20 @@ showAllEventsInDay(container) {
     setView(view) {
         this.currentView = view;
         this.render();
-        
-        // Zatím podporujeme jen měsíční pohled
-        if (view === 'week') {
-            console.warn('Týdenní pohled není zatím implementován');
-        }
     }
 
     /**
      * Klik na událost: kromě volání callbacku zobrazí i alert s tooltipem
      */
     handleEventClick(eventElement) {
-    if (this.options.onEventClick) {
-        const eventData = {
-            id: eventElement.dataset.eventId,
-            userId: eventElement.dataset.userId
-        };
-        this.options.onEventClick(eventData, eventElement);
+        if (this.options.onEventClick) {
+            const eventData = {
+                id: eventElement.dataset.eventId,
+                userId: eventElement.dataset.userId
+            };
+            this.options.onEventClick(eventData, eventElement);
+        }
     }
-}
 
     /**
      * Klik na den
@@ -725,19 +837,19 @@ showAllEventsInDay(container) {
      * Odebrání události
      */
     removeEvent(eventId) {
-    fetch(`/admin/delete?id=${eventId}`, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                document.querySelector(`#event-${eventId}`).remove();
-            } else {
-                alert('Chyba při mazání události.');
-            }
-        })
-        .catch(error => {
-            console.error('Chyba:', error);
-        });
-}
+        fetch(`/admin/delete?id=${eventId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.querySelector(`#event-${eventId}`).remove();
+                } else {
+                    alert('Chyba při mazání události.');
+                }
+            })
+            .catch(error => {
+                console.error('Chyba:', error);
+            });
+    }
 
     /**
      * Zobrazení loading stavu
@@ -831,11 +943,6 @@ showAllEventsInDay(container) {
         this.options = { ...this.options, ...newOptions };
         this.render();
     }
-    
-    document.getElementById('select-all').addEventListener('change', function (e) {
-    const checkboxes = document.querySelectorAll('input[name="ids[]"]');
-    checkboxes.forEach(checkbox => checkbox.checked = e.target.checked);
-});
 }
 
 // Export pro použití v Nette

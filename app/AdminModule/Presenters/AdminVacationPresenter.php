@@ -113,8 +113,12 @@ public function handleDelete($id): void
     }
 }
 
-public function handleBulkDelete(array $ids): void
+public function handleBulkDelete(): void
 {
+    // Získání POST dat z HTTP requestu
+    $httpRequest = $this->getHttpRequest();
+    $ids = $httpRequest->getPost('ids', []);
+    
     \Tracy\Debugger::barDump($ids, 'IDs received for bulk delete');
 
     if (empty($ids)) {

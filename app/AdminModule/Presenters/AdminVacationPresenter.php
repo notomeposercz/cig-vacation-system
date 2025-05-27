@@ -115,13 +115,28 @@ public function handleDelete($id): void
 
 public function handleBulkDelete(array $ids): void
 {
+    \Tracy\Debugger::barDump($ids, 'IDs received for bulk delete');
+
+    if (empty($ids)) {
+        $this->flashMessage('Nebyla vybrána žádná událost k smazání.', 'error');
+        $this->redirect('this');
+        return;
+    }
+
     try {
-        $this->database->table('vacation_requests')
+        $deletedCount = $this->database->table('vacation_requests')
             ->where('id IN ?', $ids)
             ->delete();
 
-        $this->flashMessage('Vybrané události byly úspěšně smazány.', 'success');
+        \Tracy\Debugger::barDump($deletedCount, 'Number of deleted records');
+
+        if ($deletedCount > 0) {
+            $this->flashMessage('Vybrané události byly úspěšně smazány.', 'success');
+        } else {
+            $this->flashMessage('Žádné z vybraných událostí nebyly nalezeny.', 'error');
+        }
     } catch (\Exception $e) {
+        \Tracy\Debugger::log($e, \Tracy\ILogger::ERROR);
         $this->flashMessage('Chyba při mazání vybraných událostí.', 'error');
     }
 

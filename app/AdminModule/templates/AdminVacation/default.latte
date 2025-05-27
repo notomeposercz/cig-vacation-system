@@ -5,9 +5,11 @@
 {block content}
     <h1>Administrace - Žádosti o dovolenou</h1>
 
+    <form method="post" action="{$presenter->link('bulkDelete!')}">
     <table class="table">
         <thead>
             <tr>
+                <th><input type="checkbox" id="select-all"></th>
                 <th>Žadatel</th>
                 <th>Od</th>
                 <th>Do</th>
@@ -21,6 +23,7 @@
         </thead>
         <tbody>
             <tr n:foreach="$requests as $request" class="status-{$request->status}-row">
+                <td><input type="checkbox" name="ids[]" value="{$request->id}"></td>
                 <td>{$request->user->first_name} {$request->user->last_name}</td>
                 <td>{$request->start_date|date:'j. F Y'}</td>
                 <td>{$request->end_date|date:'j. F Y'}</td>
@@ -30,10 +33,20 @@
                 <td>{$request->note}</td>
                 <td>{$request->created_at|date:'j.n.Y H:i'}</td>
                 <td>
-    <a n:href="approve! id => $request->id" class="btn btn-success btn-sm">Schválit</a>
-    <a n:href="reject! id => $request->id" class="btn btn-danger btn-sm">Zamítnout</a>
-</td>
+                    <a n:href="approve! id => $request->id" class="btn btn-success btn-sm">Schválit</a>
+                    <a n:href="reject! id => $request->id" class="btn btn-danger btn-sm">Zamítnout</a>
+                    <a n:href="delete! id => $request->id" class="btn btn-danger btn-sm" onclick="return confirm('Opravdu chcete smazat tuto událost?');">Smazat</a>
+                </td>
             </tr>
         </tbody>
     </table>
+    <button type="submit" class="btn btn-danger">Smazat vybrané</button>
+</form>
+
+<script>
+    document.getElementById('select-all').addEventListener('change', function (e) {
+        const checkboxes = document.querySelectorAll('input[name="ids[]"]');
+        checkboxes.forEach(checkbox => checkbox.checked = e.target.checked);
+    });
+</script>
 {/block}

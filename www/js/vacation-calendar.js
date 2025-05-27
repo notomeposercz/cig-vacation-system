@@ -725,9 +725,19 @@ showAllEventsInDay(container) {
      * Odebrání události
      */
     removeEvent(eventId) {
-        this.events = this.events.filter(event => event.id !== eventId);
-        this.renderEvents();
-    }
+    fetch(`/admin/delete?id=${eventId}`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.querySelector(`#event-${eventId}`).remove();
+            } else {
+                alert('Chyba při mazání události.');
+            }
+        })
+        .catch(error => {
+            console.error('Chyba:', error);
+        });
+}
 
     /**
      * Zobrazení loading stavu
@@ -821,6 +831,11 @@ showAllEventsInDay(container) {
         this.options = { ...this.options, ...newOptions };
         this.render();
     }
+    
+    document.getElementById('select-all').addEventListener('change', function (e) {
+    const checkboxes = document.querySelectorAll('input[name="ids[]"]');
+    checkboxes.forEach(checkbox => checkbox.checked = e.target.checked);
+});
 }
 
 // Export pro použití v Nette

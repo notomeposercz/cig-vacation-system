@@ -676,3 +676,39 @@
     text-overflow: ellipsis;
     max-width: calc(100% - 10px);  /* Ponechat prostor pro padding */
 }
+
+.btn-danger {
+    background-color: #d9534f;
+    color: white;
+    border: 1px solid #d43f3a;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.btn-danger:hover {
+    background-color: #c9302c;
+    border-color: #ac2925;
+}
+
+/* Styl checkboxů */
+table .checkbox-column {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Styl tlačítka */
+.btn-danger {
+    margin-top: 10px;
+    background-color: #d9534f;
+    color: white;
+    border: 1px solid #d43f3a;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.btn-danger:hover {
+    background-color: #c9302c;
+    border-color: #ac2925;
+}

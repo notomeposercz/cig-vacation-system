@@ -95,6 +95,39 @@ class AdminVacationPresenter extends AdminBasePresenter
     $this->redirect('this');
 }
 
+public function handleDelete($id): void
+{
+    try {
+        $event = $this->database->table('vacation_requests')->get($id);
+        if (!$event) {
+            $this->flashMessage('Událost nebyla nalezena.', 'error');
+            $this->redirect('this');
+            return;
+        }
+
+        $event->delete();
+        $this->flashMessage('Událost úspěšně smazána.', 'success');
+        $this->redirect('this');
+    } catch (\Exception $e) {
+        $this->flashMessage('Chyba při mazání události.', 'error');
+    }
+}
+
+public function handleBulkDelete(array $ids): void
+{
+    try {
+        $this->database->table('vacation_requests')
+            ->where('id IN ?', $ids)
+            ->delete();
+
+        $this->flashMessage('Vybrané události byly úspěšně smazány.', 'success');
+    } catch (\Exception $e) {
+        $this->flashMessage('Chyba při mazání vybraných událostí.', 'error');
+    }
+
+    $this->redirect('this');
+}
+
 // Pomocná metoda pro extrakci ID
 private function extractNumericId($stringId): ?string 
 {
